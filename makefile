@@ -1,0 +1,80 @@
+# PSP build Makefile (pspsdk build.mak based)
+# Requires the PSPDEV toolchain and pspsdk build support.
+
+# ---- target configuration ----
+TARGET          ?= ue1_psp
+PSP_EBOOT_TITLE ?= UE1 PSP
+PSP_LARGE_MEMORY?= 1
+GPROF           ?= 0
+
+# ---- source discovery ----
+CPP_SOURCES := $(shell find Source -name "*.cpp")
+C_SOURCES   := $(shell find Source -name "*.c")
+CPP_SOURCES += extras/GitSHA1.cpp
+OBJS        := $(CPP_SOURCES:.cpp=.o) $(C_SOURCES:.c=.o)
+
+# ---- include paths ----
+INCDIRS := Source $(shell find Source -type d) Thirdparty $(shell find Thirdparty -type d 2>/dev/null)
+INCLUDES := $(addprefix -I,$(INCDIRS))
+
+# ---- toolchain ----
+PSPSDK := $(shell psp-config --pspsdk-path)
+ifeq ($(strip $(PSPSDK)),)
+$(error PSP toolchain not found; please ensure PSPDEV is set and psp-config is available)
+endif
+
+CXX := psp-g++
+CC  := psp-gcc
+
+# ---- flags ----
+COMMON_FLAGS = -ffast-math -O2 -G0 -Wall -Wextra -fno-strict-aliasing -fwrapv \
+               -DPLATFORM_PSP -DPLATFORM_POSIX -DPLATFORM_LITTLE_ENDIAN \
+               -DUNREAL_STATIC -DPSP -DNDEBUG $(INCLUDES)
+
+COMMON_FLAGS += -mno-abicalls -fno-pic
+COMMON_FLAGS += -DUSE_UNNAMED_SEM
+CXXFLAGS = $(COMMON_FLAGS) -fexceptions -fno-rtti -fno-sized-deallocation
+CFLAGS   = $(COMMON_FLAGS)
+ASFLAGS  = $(CXXFLAGS)
+
+# ---- libraries ----
+# Only list application libs; pspsdk will pull in crt/psp kernel pieces automatically.
+LIBS = -lpspgum -lpspgu -lpspaudiolib -lpspaudio -lpsppower -lpsprtc -lpsphprm -lpspctrl \
+       -lpspvram -lpspdmac -lm -lstdc++
+
+ifeq ($(GPROF),1)
+COMMON_FLAGS += -pg -DGPROF_ENABLED
+LIBS += -lpspprof
+endif
+
+# These variables drive PRX/EBOOT creation inside build.mak
+BUILD_PRX       = 1
+EXTRA_TARGETS   = EBOOT.PBP
+USE_PSPSDK_LIBC = 1
+
+include $(PSPSDK)/lib/build.mak
+
+# ---- compilation rules ----
+%.o: %.S
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJS) $(TARGET).elf $(TARGET).prx EBOOT.PBP PARAM.SFO
+	find . -name "*.o" -delete
+
+after_build:
+	@echo "=== Moving build artifacts to ./psp-out/ ==="
+	@mkdir -p psp-out
+	@mv -f EBOOT.PBP ./psp-out/EBOOT.PBP || true
+	@mv -f $(TARGET).elf ./psp-out/$(TARGET).elf || true
+	@mv -f $(TARGET).prx ./psp-out/$(TARGET).prx || true
+	@echo "=== Done ==="
+
+all: $(EXTRA_TARGETS) after_build
