@@ -2673,7 +2673,7 @@ inline void FlashSprite16Modulated
 
 
 
-void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, FSpanBuffer* Span, FLOAT Z, FPlane Light, FPlane Fog, DWORD PolyFlags )
+void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, FSpanBuffer* Span, FLOAT Z, FPlane Color, FPlane Fog, DWORD PolyFlags )
 {
 	guardSlow(USoftwareRenderDevice::DrawTile);
 
@@ -2691,10 +2691,10 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 	// Build poly.
 	FLOAT RZ = 1.0/Z;
 	FTransTexture P[4];
-	P[0].ScreenX = X   +0.5; P[0].ScreenY = Y+YL+0.5; P[0].U = U;    P[0].V = V+VL; P[0].Light = Light; P[0].Fog = Fog; P[0].Point.Z=Z; P[0].RZ=RZ;
-	P[1].ScreenX = X   +0.5; P[1].ScreenY = Y   +0.5; P[1].U = U;    P[1].V = V;    P[1].Light = Light; P[1].Fog = Fog; P[1].Point.Z=Z; P[1].RZ=RZ;
-	P[2].ScreenX = X+XL+0.5; P[2].ScreenY = Y   +0.5; P[2].U = U+UL; P[2].V = V;    P[2].Light = Light; P[2].Fog = Fog; P[2].Point.Z=Z; P[2].RZ=RZ;
-	P[3].ScreenX = X+XL+0.5; P[3].ScreenY = Y+YL+0.5; P[3].U = U+UL; P[3].V = V+VL; P[3].Light = Light; P[3].Fog = Fog; P[3].Point.Z=Z; P[3].RZ=RZ;
+	P[0].ScreenX = X   +0.5; P[0].ScreenY = Y+YL+0.5; P[0].U = U;    P[0].V = V+VL; P[0].Light = Color; P[0].Fog = Fog; P[0].Point.Z=Z; P[0].RZ=RZ;
+	P[1].ScreenX = X   +0.5; P[1].ScreenY = Y   +0.5; P[1].U = U;    P[1].V = V;    P[1].Light = Color; P[1].Fog = Fog; P[1].Point.Z=Z; P[1].RZ=RZ;
+	P[2].ScreenX = X+XL+0.5; P[2].ScreenY = Y   +0.5; P[2].U = U+UL; P[2].V = V;    P[2].Light = Color; P[2].Fog = Fog; P[2].Point.Z=Z; P[2].RZ=RZ;
+	P[3].ScreenX = X+XL+0.5; P[3].ScreenY = Y+YL+0.5; P[3].U = U+UL; P[3].V = V+VL; P[3].Light = Color; P[3].Fog = Fog; P[3].Point.Z=Z; P[3].RZ=RZ;
 	// Draw that cutie.
 	DrawGouraudPolygon( Frame, Texture, P, 4, PolyFlags, Span );
 	return;
@@ -2719,9 +2719,9 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 
 	if ( Z < 2.0) // on top of screenflash....
 	{
-		FinalLight.R = MinPositiveFloat(GMasterScale*Light.R, GMaxColor.R);
-		FinalLight.G = MinPositiveFloat(GMasterScale*Light.G, GMaxColor.G);
-		FinalLight.B = MinPositiveFloat(GMasterScale*Light.B, GMaxColor.B);
+		FinalLight.R = MinPositiveFloat(GMasterScale*Color.R, GMaxColor.R);
+		FinalLight.G = MinPositiveFloat(GMasterScale*Color.G, GMaxColor.G);
+		FinalLight.B = MinPositiveFloat(GMasterScale*Color.B, GMaxColor.B);
 		FinalFog.R = 0.f;
 		FinalFog.G = 0.f;
 		FinalFog.B = 0.f;
@@ -2732,18 +2732,18 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 		FinalFog.R		= MinPositiveFloat( Fog.R * GFloatScale.R + GFloatFog.R, GMaxColor.R );
 		FinalFog.G		= MinPositiveFloat( Fog.G * GFloatScale.G + GFloatFog.G, GMaxColor.G );
 		FinalFog.B		= MinPositiveFloat( Fog.B * GFloatScale.B + GFloatFog.B, GMaxColor.B );
-		FinalLight.R	= MinPositiveFloat( Light.R * GFloatScale.R, GMaxColor.R - FinalFog.R );
-		FinalLight.G	= MinPositiveFloat( Light.G * GFloatScale.G, GMaxColor.G - FinalFog.G );
-		FinalLight.B	= MinPositiveFloat( Light.B * GFloatScale.B, GMaxColor.B - FinalFog.B );
+		FinalLight.R	= MinPositiveFloat( Color.R * GFloatScale.R, GMaxColor.R - FinalFog.R );
+		FinalLight.G	= MinPositiveFloat( Color.G * GFloatScale.G, GMaxColor.G - FinalFog.G );
+		FinalLight.B	= MinPositiveFloat( Color.B * GFloatScale.B, GMaxColor.B - FinalFog.B );
 	}
 	else // Use only global fog.
 	{
 		FinalFog.R		= GFloatFog.R;
 		FinalFog.G		= GFloatFog.G;
 		FinalFog.B		= GFloatFog.B;
-		FinalLight.R	= MinPositiveFloat( Light.R * GFloatScale.R, GFloatRange.R );
-		FinalLight.G	= MinPositiveFloat( Light.G * GFloatScale.G, GFloatRange.G );
-		FinalLight.B	= MinPositiveFloat( Light.B * GFloatScale.B, GFloatRange.B );		
+		FinalLight.R	= MinPositiveFloat( Color.R * GFloatScale.R, GFloatRange.R );
+		FinalLight.G	= MinPositiveFloat( Color.G * GFloatScale.G, GFloatRange.G );
+		FinalLight.B	= MinPositiveFloat( Color.B * GFloatScale.B, GFloatRange.B );		
 	}
 
 	//
@@ -2843,8 +2843,8 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 	Spr.SizeX	= Spr.MaxX-Spr.MinX;  
 	Spr.SizeY	= Spr.MaxY-Spr.MinY;
 
-	// check sizes, AND see if we actually have a palette and a texture... superfluous checks ?
-	if ( (Spr.SizeX <= 0) || (Spr.SizeY <= 0) || (! (&Texture)) || (! Texture.Palette) )  return;
+	// check sizes and make sure we have a palette
+	if ( (Spr.SizeX <= 0) || (Spr.SizeY <= 0) || (! Texture.Palette) )  return;
 
 	LitPalette* SpritePalet = NULL;
 	INT RemakeColors = 0;
@@ -2925,9 +2925,9 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 		{
 			for (INT C=0; C<NUM_PAL_COLORS; C++)
 			{
-				SpritePalet->OutPalette.PtrWORD[C*4+0] = Min( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B),255) << 7;
-				SpritePalet->OutPalette.PtrWORD[C*4+1] = Min( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G),255) << 7;
-				SpritePalet->OutPalette.PtrWORD[C*4+2] = Min( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R),255) << 7;
+				SpritePalet->OutPalette.PtrWORD[C*4+0] = Min<INT>( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B), (INT)255 ) << 7;
+				SpritePalet->OutPalette.PtrWORD[C*4+1] = Min<INT>( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G), (INT)255 ) << 7;
+				SpritePalet->OutPalette.PtrWORD[C*4+2] = Min<INT>( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R), (INT)255 ) << 7;
 			}
 		}
 		else if (PaletteCID == CID_LitTileMod) 
@@ -2946,16 +2946,16 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 			if (PaletteCID == CID_LitTilePal)
 				for (INT C=0; C<NUM_PAL_COLORS; C++)
 				{
-					SpritePalet->OutPalette.PtrBYTE[C*4+0] = Min( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B),255);
-					SpritePalet->OutPalette.PtrBYTE[C*4+1] = Min( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G),255);
-					SpritePalet->OutPalette.PtrBYTE[C*4+2] = Min( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R),255);
+					SpritePalet->OutPalette.PtrBYTE[C*4+0] = Min<INT>( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B), (INT)255 );
+					SpritePalet->OutPalette.PtrBYTE[C*4+1] = Min<INT>( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G), (INT)255 );
+					SpritePalet->OutPalette.PtrBYTE[C*4+2] = Min<INT>( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R), (INT)255 );
 				}
 			else if (PaletteCID == CID_LitTileTrans)
 				for (INT C=0; C<NUM_PAL_COLORS; C++)
 				{
-					SpritePalet->OutPalette.PtrBYTE[C*4+0] =       Min( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B),255);
-					SpritePalet->OutPalette.PtrBYTE[C*4+1] = 254 & Min( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G),255);
-					SpritePalet->OutPalette.PtrBYTE[C*4+2] = 254 & Min( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R),255);
+					SpritePalet->OutPalette.PtrBYTE[C*4+0] =       Min<INT>( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B), (INT)255 );
+					SpritePalet->OutPalette.PtrBYTE[C*4+1] = 254 & Min<INT>( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G), (INT)255 );
+					SpritePalet->OutPalette.PtrBYTE[C*4+2] = 254 & Min<INT>( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R), (INT)255 );
 					SpritePalet->OutPalette.PtrBYTE[C*4+3] = 0; // needed for overflow determination
 				}
 		}
@@ -2964,17 +2964,17 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 			if (PaletteCID == CID_LitTilePal)			
 				for (INT C=0; C<NUM_PAL_COLORS; C++)
 				{
-					DWORD R = Min( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R),255);
-					DWORD G = Min( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G),255);
-					DWORD B = Min( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B),255);
+					DWORD R = Min<INT>( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R), (INT)255 );
+					DWORD G = Min<INT>( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G), (INT)255 );
+					DWORD B = Min<INT>( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B), (INT)255 );
 					SpritePalet->OutPalette.PtrDWORD[C] = (_WORD) ( (DWORD)((R&0xf8)<<8 ) + (DWORD)((G&0xfc)<< 3) + (DWORD)((B&0xf8)>>3) );
 				}
 			else if (PaletteCID == CID_LitTileTrans)
 				for (INT C=0; C<NUM_PAL_COLORS; C++)
 				{
-					DWORD R = Min( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R),255);
-					DWORD G = Min( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G),255);
-					DWORD B = Min( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B),255);
+					DWORD R = Min<INT>( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R), (INT)255 );
+					DWORD G = Min<INT>( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G), (INT)255 );
+					DWORD B = Min<INT>( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B), (INT)255 );
 					SpritePalet->OutPalette.PtrDWORD[C] = (_WORD) ( (DWORD)((R&0xf0)<<8 ) + (DWORD)((G&0xf8)<< 3) + (DWORD)((B&0xf8)>>3) );
 				}
 		}
@@ -2983,17 +2983,17 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 			if (PaletteCID == CID_LitTilePal)			
 				for (INT C=0; C<NUM_PAL_COLORS; C++)
 				{
-					DWORD R = Min( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R),255);
-					DWORD G = Min( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G),255);
-					DWORD B = Min( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B),255);
+					DWORD R = Min<INT>( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R), (INT)255 );
+					DWORD G = Min<INT>( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G), (INT)255 );
+					DWORD B = Min<INT>( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B), (INT)255 );
 					SpritePalet->OutPalette.PtrDWORD[C] = (_WORD) ( (DWORD)((R&0xf8)<<7 ) + (DWORD)((G&0xf8)<< 2) + (DWORD)((B&0xf8)>>3) );
 				}
 			else if (PaletteCID == CID_LitTileTrans)
 				for (INT C=0; C<NUM_PAL_COLORS; C++)
 				{
-					DWORD R = Min( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R),255);
-					DWORD G = Min( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G),255);
-					DWORD B = Min( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B),255);
+					DWORD R = Min<INT>( appRound(FinalLight.R * Texture.Palette[C].R + FinalFog.R), (INT)255 );
+					DWORD G = Min<INT>( appRound(FinalLight.G * Texture.Palette[C].G + FinalFog.G), (INT)255 );
+					DWORD B = Min<INT>( appRound(FinalLight.B * Texture.Palette[C].B + FinalFog.B), (INT)255 );
 					SpritePalet->OutPalette.PtrDWORD[C] = (_WORD) ( (DWORD)((R&0xf0)<<7 ) + (DWORD)((G&0xf0)<< 2) + (DWORD)((B&0xf8)>>3) );
 				}
 		}
@@ -3072,7 +3072,7 @@ void USoftwareRenderDevice::DrawTile( FSceneNode* Frame, FTextureInfo& Texture, 
 		{
 			INT MipFactor = Max( ( ( (*(DWORD*)&FUDelta) &0x7FFFFFFF) + 0x600000 ) >> 23, 
 				                 ( ( (*(DWORD*)&FVDelta) &0x7FFFFFFF) + 0x600000 ) >> 23 );
-			iMip = Clamp( (MipFactor-127), 0, Texture.NumMips-1 );
+			iMip = Clamp<INT>( (INT)(MipFactor-127), (INT)0, (INT)(Texture.NumMips-1) );
 		}
 
 		// Combine mip scaling with float -> fixed conversion.

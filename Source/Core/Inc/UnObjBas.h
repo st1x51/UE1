@@ -336,7 +336,7 @@ public: \
 	typedef TClass ThisClass;\
 	/* Create a new object of this class */ \
 	void* operator new( size_t Size, UObject* Parent=(UObject*)GObj.GetTransientPackage(), FName Name=NAME_None, DWORD SetFlags=0 ) \
-		{ return GObj.AllocateObject( StaticClass, Parent, Name, SetFlags ); } \
+		{ (void)Size; return GObj.AllocateObject( StaticClass, Parent, Name, SetFlags ); } \
 
 // Declare a concrete class.
 #define DECLARE_CLASS_WITHOUT_CONSTRUCT( TClass, TSuperClass, TStaticFlags ) \
@@ -348,7 +348,7 @@ public: \
 	virtual ~TClass() \
 		{ ConditionalDestroy(); } \
 	void* operator new( size_t Size, EInternal* Mem ) \
-		{ return (void*)Mem; } \
+		{ (void)Size; return (void*)Mem; } \
 	static void InternalConstructor( void* X ) \
 		{ new( (EInternal*)X )TClass(); } \
 
@@ -362,7 +362,7 @@ public: \
 	virtual ~TClass() \
 		{ ConditionalDestroy(); } \
 	void* operator new( size_t Size, EInternal* Mem ) \
-		{ return (void*)Mem; } \
+		{ (void)Size; return (void*)Mem; } \
 	static void InternalConstructor( void* X ) \
 		{ new( (EInternal*)X )TClass(); } \
 

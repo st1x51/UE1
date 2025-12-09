@@ -204,6 +204,13 @@ void USoftwareRenderDevice::GetStats( char* Result )
 	unguardSlow;
 }
 
+void USoftwareRenderDevice::ClearZ( FSceneNode* Frame )
+{
+	guardSlow(USoftwareRenderDevice::ClearZ);
+	// Software renderer does not maintain a Z buffer; nothing to clear.
+	unguardSlow;
+}
+
 
 
 FLOAT FastSqrtTbl[2 << FASTAPPROX_MAN_BITS];

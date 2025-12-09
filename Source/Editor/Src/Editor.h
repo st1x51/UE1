@@ -354,7 +354,7 @@ class EDITOR_API UEditorEngine : public UEngine, public FNotifyHook
 	void Init();
 	UBOOL Exec( const char* Cmd, FOutputDevice* Out=GSystem );
 	UBOOL HookExec( const char* Cmd, FOutputDevice* Out=GSystem );
-	int Key( UViewport* Viewport, EInputKey Key );
+	UBOOL Key( UViewport* Viewport, EInputKey Key );
 	void Tick( FLOAT DeltaSeconds );
 	void Draw( UViewport* Viewport, BYTE* HitData=NULL, INT* HitSize=NULL );
 	void MouseDelta( UViewport* Viewport, DWORD Buttons, FLOAT DX, FLOAT DY );

@@ -229,9 +229,9 @@ static void PentiumPolyC15Modulated()
 		DWORD UV = (GPolyC.UV.Q >> 32) & GPolyC.MaskUV;			
 		DWORD I  = GPolyC.TexBase[ _rotl (UV, GPolyC.UBits) ];
 
-		DWORD R = Min( appRound ( (FLOAT)( (*Dest ) & 0x7C00 ) * FloatPalBase[I*4+0] * (1.0f/(1<<(4+10)))  ), 0x7C00);
-		DWORD G = Min( appRound ( (FLOAT)( (*Dest ) & 0x03e0 ) * FloatPalBase[I*4+1] * (1.0f/(1<<(4+ 5)))  ), 0x03e0);
-		DWORD B = Min( appRound ( (FLOAT)( (*Dest ) & 0x001f ) * FloatPalBase[I*4+2] * (1.0f/(1<<(4+ 0)))  ), 0x001f);
+		DWORD R = Min<INT>( appRound ( (FLOAT)( (*Dest ) & 0x7C00 ) * FloatPalBase[I*4+0] * (1.0f/(1<<(4+10)))  ), (INT)0x7C00);
+		DWORD G = Min<INT>( appRound ( (FLOAT)( (*Dest ) & 0x03e0 ) * FloatPalBase[I*4+1] * (1.0f/(1<<(4+ 5)))  ), (INT)0x03e0);
+		DWORD B = Min<INT>( appRound ( (FLOAT)( (*Dest ) & 0x001f ) * FloatPalBase[I*4+2] * (1.0f/(1<<(4+ 0)))  ), (INT)0x001f);
 		*Dest = ( (R & 0x7C00) + (G & 0x3E0) + (B & 0x001F) );
 		
 		GPolyC.UV.Q += GPolyC.DUV.Q;
@@ -282,9 +282,9 @@ static void PentiumPolyC16Modulated()
 		DWORD UV = (GPolyC.UV.Q >> 32) & GPolyC.MaskUV;			
 		DWORD I  = GPolyC.TexBase[ _rotl (UV, GPolyC.UBits) ];
 
-		DWORD R = Min( appRound ( (FLOAT)( (*Dest ) & 0xF800 ) * FloatPalBase[I*4+0] * (1.0f/(1<<(4+11)))  ), 0xF800);
-		DWORD G = Min( appRound ( (FLOAT)( (*Dest ) & 0x07C0 ) * FloatPalBase[I*4+1] * (1.0f/(1<<(5+ 5)))  ), 0x07C0);
-		DWORD B = Min( appRound ( (FLOAT)( (*Dest ) & 0x001F ) * FloatPalBase[I*4+2] * (1.0f/(1<<(4+ 0)))  ), 0x001f);
+		DWORD R = Min<INT>( appRound ( (FLOAT)( (*Dest ) & 0xF800 ) * FloatPalBase[I*4+0] * (1.0f/(1<<(4+11)))  ), (INT)0xF800);
+		DWORD G = Min<INT>( appRound ( (FLOAT)( (*Dest ) & 0x07C0 ) * FloatPalBase[I*4+1] * (1.0f/(1<<(5+ 5)))  ), (INT)0x07C0);
+		DWORD B = Min<INT>( appRound ( (FLOAT)( (*Dest ) & 0x001F ) * FloatPalBase[I*4+2] * (1.0f/(1<<(4+ 0)))  ), (INT)0x001f);
 		*Dest = ( (R & 0xF800) + (G & 0x7E0) + (B & 0x001F) );
 
 		GPolyC.UV.Q += GPolyC.DUV.Q;
@@ -669,9 +669,9 @@ static void PentiumPolyC32Modulated()
 		DWORD UV = (GPolyC.UV.Q >> 32) & GPolyC.MaskUV;			
 		DWORD I  = GPolyC.TexBase[ _rotl (UV, GPolyC.UBits) ];
 
-		DWORD R = Min(appRound ((FLOAT)( (*Dest ) & 0xff0000 ) * FloatPalBase[I*4+0]* (1.0/128.0)),255<<16);
-		DWORD G = Min(appRound ((FLOAT)( (*Dest ) & 0x00ff00 ) * FloatPalBase[I*4+1]* (1.0/128.0)),255<< 8);
-		DWORD B = Min(appRound ((FLOAT)( (*Dest ) & 0x0000ff ) * FloatPalBase[I*4+2]* (1.0/128.0)),255<< 0);
+		DWORD R = Min<INT>(appRound ((FLOAT)( (*Dest ) & 0xff0000 ) * FloatPalBase[I*4+0]* (1.0/128.0)), (INT)(255<<16));
+		DWORD G = Min<INT>(appRound ((FLOAT)( (*Dest ) & 0x00ff00 ) * FloatPalBase[I*4+1]* (1.0/128.0)), (INT)(255<< 8));
+		DWORD B = Min<INT>(appRound ((FLOAT)( (*Dest ) & 0x0000ff ) * FloatPalBase[I*4+2]* (1.0/128.0)), (INT)(255<< 0));
 		*Dest = ( (R & 0xff0000) + (G & 0xff00) + B);
 		
 		GPolyC.UV.Q += GPolyC.DUV.Q;
@@ -3484,7 +3484,7 @@ void USoftwareRenderDevice::MMXFlashTriangle
 	// mantissa over into the exponent. Scales from 0x000000 to max 0x7f0000. 
 
 	INT MipFactor = Max(( (ExpU&0x7FFFFFFF) + 0x600000 ) >>23, ( (ExpV & 0x7FFFFFFF) + 0x600000 ) >>23);
-	INT iMip = Clamp( (MipFactor-127), 0, Texture.NumMips-1 );
+	INT iMip = Clamp<INT>( (INT)(MipFactor-127), (INT)0, (INT)(Texture.NumMips-1) );
 
 	// Scale the Fog and Light colors at the vertices. Scale and Fog values range 0-255 for MMX.
 	// Into TriVertex points just so we don't have to modify any vertices.
@@ -4052,7 +4052,7 @@ void USoftwareRenderDevice::PentiumFlashTriangle
 	// the mantissa over in to the exponent. Scales from 0x000000 to max 0x7f0000.
 
 	INT MipFactor = Max(( (ExpU&0x7FFFFFFF) + 0x000000 ) >> 23, ( (ExpV & 0x7FFFFFFF) + 0x000000 ) >>23);
-	INT iMip = Clamp( (MipFactor-127), 0, Texture.NumMips-1 );
+	INT iMip = Clamp<INT>( (INT)(MipFactor-127), (INT)0, (INT)(Texture.NumMips-1) );
 
 	//See if Texture.Uscale and Vscale are 1.f so they can be ignored...
 
@@ -4373,7 +4373,7 @@ void USoftwareRenderDevice::PentiumFlashTriangle
 	Polygon drawing routine.
 -----------------------------------------------------------------------------*/
 
-void USoftwareRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& Texture, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* SpanBuffer )
+void USoftwareRenderDevice::DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& Texture, FTransTexture** Pts, int NumPts, DWORD PolyFlags, FSpanBuffer* SpanBuffer )
 
 {
 

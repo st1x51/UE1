@@ -517,7 +517,7 @@ UBOOL UNSDLViewport::Lock( FPlane FlashScale, FPlane FlashFog, FPlane ScreenClea
 		// Obtain pointer to screen.
 		Stride = SizeX;
 		ScreenPointer = NULL;
-		SDL_LockTexture( SDLTex, NULL, (void **)&ScreenPointer, &Stride );
+		//SDL_LockTexture( SDLTex, NULL, (void **)&ScreenPointer, &Stride );
 		Stride /= ColorBytes;
 		check(ScreenPointer);
 	}
@@ -601,7 +601,7 @@ void UNSDLViewport::Repaint()
         unguard;
 }
 
-void UNSDLViewport::WriteBinary( const void* Data, int Length, EName MsgType )
+void UNSDLViewport::WriteBinary( const void* Data, INT Length, EName MsgType )
 {
         guard(UNSDLViewport::WriteBinary);
         UViewport::WriteBinary( Data, Length, MsgType );

@@ -10,7 +10,17 @@ GPROF           ?= 0
 # ---- source discovery ----
 CPP_SOURCES := $(shell find Source -name "*.cpp")
 C_SOURCES   := $(shell find Source -name "*.c")
-CPP_SOURCES += extras/GitSHA1.cpp
+
+# Exclude desktop-only drivers and launchers from PSP builds.
+CPP_SOURCES := $(filter-out Source/NOpenGLESDrv/%, $(CPP_SOURCES))
+CPP_SOURCES := $(filter-out Source/NOpenGLDrv/%,  $(CPP_SOURCES))
+CPP_SOURCES := $(filter-out Source/NOpenALDrv/%,  $(CPP_SOURCES))
+CPP_SOURCES := $(filter-out Source/NSDLDrv/%,     $(CPP_SOURCES))
+CPP_SOURCES := $(filter-out Source/Unreal/Src/SDLLaunch%, $(CPP_SOURCES))
+CPP_SOURCES := $(filter-out Source/Window/%, $(CPP_SOURCES))
+CPP_SOURCES := $(filter-out Source/WinDrv/%, $(CPP_SOURCES))
+CPP_SOURCES := $(filter-out Source/Unreal/Src/WinLaunch%, $(CPP_SOURCES))
+CPP_SOURCES := $(filter-out Source/Editor/%, $(CPP_SOURCES))
 OBJS        := $(CPP_SOURCES:.cpp=.o) $(C_SOURCES:.c=.o)
 
 # ---- include paths ----
@@ -25,6 +35,27 @@ endif
 
 CXX := psp-g++
 CC  := psp-gcc
+
+# Package identifiers to avoid duplicate THIS_PACKAGE symbols.
+Source/Core/%.o     : CXXFLAGS += -DUPACKAGE_NAME=Core     -DCORE_EXPORTS
+Source/Engine/%.o   : CXXFLAGS += -DUPACKAGE_NAME=Engine   -DENGINE_EXPORTS
+Source/Render/%.o   : CXXFLAGS += -DUPACKAGE_NAME=Render   -DRENDER_EXPORTS
+Source/Fire/%.o     : CXXFLAGS += -DUPACKAGE_NAME=Fire     -DFIRE_EXPORTS
+Source/IpDrv/%.o    : CXXFLAGS += -DUPACKAGE_NAME=IpDrv    -DIPDRV_EXPORTS
+Source/SoftDrv/%.o  : CXXFLAGS += -DUPACKAGE_NAME=SoftDrv  -DSOFTDRV_EXPORTS
+Source/SoundDrv/%.o : CXXFLAGS += -DUPACKAGE_NAME=SoundDrv -DSOUNDDRV_EXPORTS
+Source/Unreal/%.o   : CXXFLAGS += -DUPACKAGE_NAME=Unreal   -DUNREAL_EXPORTS
+Source/PSPMain/%.o  : CXXFLAGS += -DUPACKAGE_NAME=PSPMain  -DPSPMAIN_EXPORTS
+
+Source/Core/%.o     : CFLAGS += -DUPACKAGE_NAME=Core     -DCORE_EXPORTS
+Source/Engine/%.o   : CFLAGS += -DUPACKAGE_NAME=Engine   -DENGINE_EXPORTS
+Source/Render/%.o   : CFLAGS += -DUPACKAGE_NAME=Render   -DRENDER_EXPORTS
+Source/Fire/%.o     : CFLAGS += -DUPACKAGE_NAME=Fire     -DFIRE_EXPORTS
+Source/IpDrv/%.o    : CFLAGS += -DUPACKAGE_NAME=IpDrv    -DIPDRV_EXPORTS
+Source/SoftDrv/%.o  : CFLAGS += -DUPACKAGE_NAME=SoftDrv  -DSOFTDRV_EXPORTS
+Source/SoundDrv/%.o : CFLAGS += -DUPACKAGE_NAME=SoundDrv -DSOUNDDRV_EXPORTS
+Source/Unreal/%.o   : CFLAGS += -DUPACKAGE_NAME=Unreal   -DUNREAL_EXPORTS
+Source/PSPMain/%.o  : CFLAGS += -DUPACKAGE_NAME=PSPMain  -DPSPMAIN_EXPORTS
 
 # ---- flags ----
 COMMON_FLAGS = -ffast-math -O2 -G0 -Wall -Wextra -fno-strict-aliasing -fwrapv \

@@ -6,12 +6,15 @@ Revision history:
 	* Created by Tim Sweeney.
 =============================================================================*/
 
+#pragma once
+
+#if defined(PLATFORM_WIN32)
 #pragma warning( disable : 4201 )
 #define STRICT
 #include <windows.h>
 #include <commctrl.h>
 #include <ddraw.h>
-#include "Res\WinDrvRes.h"
+#include "Res\\WinDrvRes.h"
 #include "Engine.h"
 #include "Window.h"
 
@@ -38,6 +41,7 @@ enum EWinViewportStatus
 	WIN_ViewportClosing	= 2, // Viewport is closing and CloseViewport has been called.
 };
 
+#endif // PLATFORM_WIN32
 //
 // Blitting types.
 //

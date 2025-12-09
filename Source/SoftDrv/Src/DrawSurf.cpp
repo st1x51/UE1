@@ -383,9 +383,9 @@ void USoftwareRenderDevice::InitMMXFlashes( FLOAT Brightness, INT ColorBytes, DW
 	// Unlit light level.	Affected by flashcompress also.
 	FLOAT UnlitLight = (Brightness + 0.5f) * (FLOAT)(UNLITLEVEL << 7) / (FLOAT)(0x80);
 
-	UnlitMMXValue.R = Clamp( appRound(UnlitLight * FlashScale.R) ,0,0x7FFF);
-	UnlitMMXValue.G = Clamp( appRound(UnlitLight * FlashScale.G) ,0,0x7FFF);
-	UnlitMMXValue.B = Clamp( appRound(UnlitLight * FlashScale.B) ,0,0x7FFF);
+	UnlitMMXValue.R = Clamp<INT>( appRound(UnlitLight * FlashScale.R) , (INT)0, (INT)0x7FFF);
+	UnlitMMXValue.G = Clamp<INT>( appRound(UnlitLight * FlashScale.G) , (INT)0, (INT)0x7FFF);
+	UnlitMMXValue.B = Clamp<INT>( appRound(UnlitLight * FlashScale.B) , (INT)0, (INT)0x7FFF);
 	UnlitMMXValue.A = 0;
 
 	unguardSlow;
@@ -424,7 +424,7 @@ void USoftwareRenderDevice::InitColorTables( FLOAT Brightness, INT ColorBytes, D
 	
 	FLOAT Scale = (0.50f + Brightness) * 8.0 / (128.0 * 128.0);
 
-	DWORD UnlitValue = Clamp( appRound( (FLOAT)UNLITLEVEL * (0.50f + Brightness) ),0,127);
+	DWORD UnlitValue = Clamp<INT>( appRound( (FLOAT)UNLITLEVEL * (0.50f + Brightness) ), (INT)0, (INT)127);
 	UnlitPentiumValue = UnlitValue + (UnlitValue << 8) + (UnlitValue <<16) + (UnlitValue << 24);
 
 	int FogR  = appRound( FlashFog.R * (double)( 1<<20 ) );  // 1<<20  
@@ -611,7 +611,7 @@ void USoftwareRenderDevice::InitDrawSurf()
 
 	// Mipmap depth lookup table.
 	for( i=0; i<512; i++ )
-		MipTbl[i] = &Mips[Clamp( i - 0x85, 0, (INT)ARRAY_COUNT(Mips)-1 )];
+		MipTbl[i] = &Mips[Clamp<INT>( i - 0x85, (INT)0, (INT)ARRAY_COUNT(Mips)-1 )];
 
 	for (i = 0; i<16; i++)
 	{ 
@@ -20488,7 +20488,7 @@ void USoftwareRenderDevice::DrawComplexSurface( FSceneNode* Frame, FSurfaceInfo&
 				PErrorSqr  = PerspError * PerspError * 0.25;
 
 				// Set maximum perspective subdivision size. MUST BE 8-aligned !!!!
-				MaxSub = (Min( Frame->X >> 1, MAXPERSPSUBDIVSIZE) & ~7); 
+				MaxSub = (Min<INT>( Frame->X >> 1, (INT)MAXPERSPSUBDIVSIZE) & ~7); 
 
 				if (GIsMMX)
 				{
@@ -20642,7 +20642,7 @@ void USoftwareRenderDevice::DrawComplexSurface( FSceneNode* Frame, FSurfaceInfo&
 			{		
 				for( int i=0; i<ARRAY_COUNT(Mips); i++ )
 				{
-					INT iMip            = Min(i,Surface.Texture->NumMips-1);
+					INT iMip            = Min<INT>( i, (INT)(Surface.Texture->NumMips-1) );
 					FMipmap& Src		= *Surface.Texture->Mips[iMip];
 					Mips[i].Data		= Src.DataPtr;
 					Mips[i].TexURotate  = 32 - iMip + (FixedBits - 12) - Src.UBits;	// 16:16 -> 12:Vshift:fractional
@@ -20656,7 +20656,7 @@ void USoftwareRenderDevice::DrawComplexSurface( FSceneNode* Frame, FSurfaceInfo&
 			{
 				for( int i=0; i<ARRAY_COUNT(Mips); i++ )
 				{					
-					INT iMip            = Min(i,Surface.Texture->NumMips-1);
+					INT iMip            = Min<INT>( i, (INT)(Surface.Texture->NumMips-1) );
 					FMipmap& Src		= *Surface.Texture->Mips[iMip];
 					Mips[i].Data		= Src.DataPtr;
 					Mips[i].Mask.DH		= Src.VSize-1;
@@ -20677,7 +20677,7 @@ void USoftwareRenderDevice::DrawComplexSurface( FSceneNode* Frame, FSurfaceInfo&
 				TextureDataID = Surface.Texture->CacheID;
 				for( int i=0; i<ARRAY_COUNT(Mips); i++ )
 				{
-					INT iMip            = Min(i,Surface.Texture->NumMips-1);
+					INT iMip            = Min<INT>( i, (INT)(Surface.Texture->NumMips-1) );
 					FMipmap& Src		= *Surface.Texture->Mips[iMip];
 					Mips[i].Data		= Src.DataPtr;
 				}

@@ -1147,7 +1147,7 @@ void FLightManager::spatial_Cylinder( FTextureInfo& Map, FLightInfo* Info, BYTE*
 	SPATIAL_PRE
 		FVector Vertex = Vertex1 - Info->Actor->Location;
 		for( INT i=Info->MinU; i<Info->MaxU; i++,Vertex+=VertexDU,Src++,Dest++ )
-			*Dest = Max(0,appFloor(*Src * (1.0 - ( Square(Vertex.X) + Square(Vertex.Y) ) * Square(Info->RRadius)) ));
+			*Dest = Max<INT>(0,appFloor(*Src * (1.0 - ( Square(Vertex.X) + Square(Vertex.Y) ) * Square(Info->RRadius)) ));
 	SPATIAL_POST
 	unguardSlow;
 }
@@ -1442,8 +1442,8 @@ void FLightManager::FLightInfo::ComputeFromActor( FTextureInfo& Map, FSceneNode*
 		FLOAT   RadiusV     = PlaneRadius * SqrtApprox(MapCoords->YAxis.SizeSquared());
 
 		// Save clipping region.
-		MinU = Max( appRound( (CenterU - RadiusU)/LightMap.UScale), 0 );
-		MinV = Max( appRound( (CenterV - RadiusV)/LightMap.VScale), 0 );
+		MinU = Max<INT>( appRound( (CenterU - RadiusU)/LightMap.UScale), (INT)0 );
+		MinV = Max<INT>( appRound( (CenterV - RadiusV)/LightMap.VScale), (INT)0 );
 		MaxU = Min( appRound( (CenterU + RadiusU)/LightMap.UScale), LightMap.UClamp );//!!
 		MaxV = Min( appRound( (CenterV + RadiusV)/LightMap.VScale), LightMap.VClamp );
 	}
@@ -2140,7 +2140,7 @@ DWORD FLightManager::SetupForActor( FSceneNode* InFrame, AActor* InActor, FVolAc
 	&&	!Frame->Viewport->Client->NoLighting )
 	{
 		// Get actor light cache.
-		INT Delta      = Clamp((INT)((Frame->Viewport->CurrentTime-Frame->Viewport->LastUpdateTime)*768),0,255);
+		INT Delta      = Clamp<INT>((INT)((Frame->Viewport->CurrentTime-Frame->Viewport->LastUpdateTime)*768), (INT)0, (INT)255);
 		INT FrameCount = Frame->Viewport->FrameCount;
 		INT* Num       = NULL;
 		struct FInfo
@@ -2245,12 +2245,12 @@ DWORD FLightManager::SetupForActor( FSceneNode* InFrame, AActor* InActor, FVolAc
 				Consider[i]->SpecialTag |= 1;
 
 				// Update factor.
-				Consider[i]->SpecialTag = Min( (INT)Consider[i]->SpecialTag+Delta, 255 ) | 1;
+				Consider[i]->SpecialTag = Min<INT>( (INT)Consider[i]->SpecialTag+Delta, (INT)255 ) | 1;
 			}
 			else
 			{
 				// This light is not considered visible.
-				Consider[i]->SpecialTag = Max( (INT)Consider[i]->SpecialTag-Delta, 0 ) & ~1;
+				Consider[i]->SpecialTag = Max<INT>( (INT)Consider[i]->SpecialTag-Delta, (INT)0 ) & ~1;
 				if( Consider[i]->SpecialTag>0 )
 					AddLight( Actor, Consider[i] );
 			}

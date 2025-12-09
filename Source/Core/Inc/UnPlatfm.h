@@ -73,7 +73,7 @@ class CORE_API FGlobalPlatform : public FOutputDevice, public FFeedbackContext, 
 {
 public:
 	// FOutputDevice interface.
-	void WriteBinary( const void* Data, int Length, EName Event );
+	void WriteBinary( const void* Data, INT Length, EName Event );
 
 	// FFeedbackContext interface.
 	void Warnf( const char* Fmt, ... );

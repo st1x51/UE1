@@ -719,7 +719,7 @@ void URender::DrawActorSprite( FSceneNode* Frame, FDynamicSprite* Sprite )
 			INT Count=1;
 			for( UTexture* Test=Texture->AnimNext; Test && Test!=Texture; Test=Test->AnimNext )
 				Count++;
-			INT Num = Clamp( appFloor(Sprite->Actor->LifeFraction()*Count), 0, Count-1 );
+			INT Num = Clamp<INT>( appFloor(Sprite->Actor->LifeFraction()*Count), (INT)0, (INT)(Count-1) );
 			while( Num-- > 0 )
 				Texture = Texture->AnimNext;
 			SavedNext         = Texture->AnimNext;//sort of a hack!!

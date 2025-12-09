@@ -6,6 +6,9 @@
 		* Created by Tim Sweeney
 =============================================================================*/
 
+#ifndef PLATFORM_WIN32
+// Windows GUI is not built on non-Win32 platforms (e.g., PSP), so skip this file.
+#else
 #pragma warning( disable : 4201 )
 #define STRICT
 #include <windows.h>
@@ -86,6 +89,8 @@ void WINDOW_API InitWindowing()
 
 	unguard;
 }
+
+#endif // PLATFORM_WIN32
 
 /*-----------------------------------------------------------------------------
 	The End.

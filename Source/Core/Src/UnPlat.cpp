@@ -6,7 +6,12 @@
 		* Created by Tim Sweeney
 =============================================================================*/
 
-#if defined(PLATFORM_SDL)
+#if defined(PLATFORM_PSP)
+#include <pspkernel.h>
+#include <pspthreadman.h>
+#include <psptypes.h>
+#include <psprtc.h>
+#elif defined(PLATFORM_SDL)
 #include "SDL2/SDL.h"
 #elif defined(PLATFORM_MSVC)
 #pragma warning( disable : 4201 )
@@ -198,6 +203,8 @@ CORE_API void appRequestExit()
 	Ev.type = SDL_QUIT;
 	Ev.quit.timestamp = SDL_GetTicks();
 	SDL_PushEvent( &Ev );
+#elif defined(PLATFORM_PSP)
+	sceKernelExitGame();
 #endif
 	GIsRequestingExit=1;
 	unguard;
@@ -485,6 +492,17 @@ void appInit()
 	// Get CPU info.
 	GPageSize = 4096; // TODO: sysconf?
 	GProcessorCount = SDL_GetCPUCount();
+#elif defined(PLATFORM_PSP)
+	debugf( NAME_Init, "Detected: PlayStation Portable" );
+
+	// PSP timers tick at 1 MHz.
+	const DOUBLE Frequency = 1000000.0;
+	GSecondsPerCycle = 1.0 / Frequency;
+	debugf( NAME_Init, "CPU Timer Freq=%f Hz", (FLOAT)Frequency );
+
+	// PSP is a single-core MIPS with a 4K page size.
+	GPageSize = 4096;
+	GProcessorCount = 1;
 #endif // PLATFORM_
 
 #if __INTEL__
@@ -633,6 +651,9 @@ CORE_API void* appGetDllHandle( const char* Filename )
 		strcat( Temp, DLLEXT );
 		Result = (void*)LoadLibrary( Filename );
 	}
+#elif defined(PLATFORM_PSP)
+	// PSP does not support loading external DLLs; everything is statically linked.
+	void* Result = NULL;
 #else
 	char Test[1024];
 	const char* PackageName = Filename;
@@ -692,6 +713,8 @@ CORE_API void appFreeDllHandle( void* DllHandle )
 	// nothing
 #elif defined(PLATFORM_WIN32)
 	FreeLibrary( (HMODULE)DllHandle );
+#elif defined(PLATFORM_PSP)
+	// nothing to unload on PSP
 #else
 	dlclose( DllHandle );
 #endif
@@ -712,6 +735,8 @@ CORE_API void* appGetDllExport( void* DllHandle, const char* ProcName )
 	return appGetStaticExport( ProcName );
 #elif defined(PLATFORM_WIN32)
 	return (void*)GetProcAddress( (HMODULE)DllHandle, ProcName );
+#elif defined(PLATFORM_PSP)
+	return NULL;
 #else
 	return (void*)dlsym( DllHandle, ProcName );
 #endif
@@ -750,6 +775,8 @@ CORE_API DOUBLE appSeconds()
 	return (DOUBLE)ret.QuadPart * GSecondsPerCycle;
 #elif defined(PLATFORM_SDL)
 	return (DOUBLE)SDL_GetPerformanceCounter() * GSecondsPerCycle;
+#elif defined(PLATFORM_PSP)
+	return (DOUBLE)sceKernelGetSystemTimeWide() * GSecondsPerCycle;
 #else
 	return 0;
 #endif
@@ -763,6 +790,8 @@ CORE_API DWORD appCycles()
 	return ret.LowPart;
 #elif defined(PLATFORM_SDL)
 	return SDL_GetPerformanceCounter();
+#elif defined(PLATFORM_PSP)
+	return (DWORD)sceKernelGetSystemTimeLow();
 #else
 	return 0;
 #endif
@@ -772,6 +801,8 @@ CORE_API void appSleep( FLOAT Sec )
 {
 #ifdef PLATFORM_MSVC
 	Sleep( Sec * 1000.f );
+#elif defined(PLATFORM_PSP)
+	sceKernelDelayThread( (unsigned int)( Sec * 1000000.f ) );
 #else
 	usleep( Sec * 1000000.f );
 #endif
@@ -807,6 +838,19 @@ CORE_API void appSystemTime( INT& Year, INT& Month, INT& DayOfWeek, INT& Day, IN
 	Min = LT->tm_min;
 	Sec = LT->tm_sec;
 	MSec = (INT)( TV.tv_usec / 1000 );
+#ifdef PLATFORM_PSP
+	ScePspDateTime PSPTime;
+	if ( sceRtcGetCurrentClockLocalTime( &PSPTime ) >= 0 )
+	{
+		Year		= PSPTime.year;
+		Month		= PSPTime.month;
+		Day			= PSPTime.day;
+		Hour		= PSPTime.hour;
+		Min			= PSPTime.minute;
+		Sec			= PSPTime.second;
+		MSec		= PSPTime.microsecond / 1000;
+	}
+#endif
 #endif
 
 	unguard;
@@ -830,6 +874,11 @@ void appLaunchURL( const char* URL, const char* Parms, char* Error256 )
 	INT Code = (INT)ShellExecute(NULL,"open",URL,Parms,"",SW_SHOWNORMAL);
 	if( Code<=32 )
 		appSprintf( Error256, LocalizeError("UrlFailed") );
+#elif defined(PLATFORM_PSP)
+	(void)Parms;
+	appStrcpy( Error256, "Not supported on PSP." );
+#else
+	(void)Parms;
 #endif
 	unguard;
 }
@@ -929,9 +978,15 @@ CORE_API void appCleanFileCache()
 	{
 		for( INT i=0; i<Found.Num(); i++ )
 		{
+			#if defined(PLATFORM_PSP)
+			struct stat Buf;
+			#define STAT_FN stat
+			#else
 			struct _stat Buf;
+			#define STAT_FN _stat
+			#endif
 			appSprintf( Temp, "%s" PATH_SEPARATOR "%s", PATH(GSys->CachePath), *Found(i) );
-			if( _stat(Temp,&Buf)==0 )
+			if( STAT_FN(Temp,&Buf)==0 )
 			{
 				time_t CurrentTime, FileTime;
 				FileTime = Buf.st_mtime;
@@ -944,6 +999,7 @@ CORE_API void appCleanFileCache()
 					unlink( Temp );
 				}
 			}
+			#undef STAT_FN
 		}
 	}
 	unguard;
@@ -1035,11 +1091,11 @@ CORE_API UBOOL appCopyFile( const char* Src, const char* Dest )
 // This code is unguarded because trapped errors will just try
 // to log more errors, resulting in a recursive mess.
 //
-void FGlobalPlatform::WriteBinary( const void* Data, INT Length, EName Event )
+void FGlobalPlatform::WriteBinary( const void* Data, INT Length, EName MsgType )
 {
 	try
 	{
-		FName EventName = FName(Event);
+		FName EventName = FName(MsgType);
 		if( !(EventName.GetFlags() & RF_Suppress) )
 		{
 			INT FoundIndex=0;
@@ -1058,7 +1114,7 @@ void FGlobalPlatform::WriteBinary( const void* Data, INT Length, EName Event )
 			}
 			if( GLogHook )
 			{
-				GLogHook->WriteBinary( Data, Length, Event );
+				GLogHook->WriteBinary( Data, Length, MsgType );
 			}
 		}
 	}
@@ -1571,6 +1627,9 @@ CORE_API const char* appBaseDir()
 				break;
 		BaseDir[i] = 0;
 #elif defined(PLATFORM_PSVITA)
+		if ( getcwd( BaseDir, sizeof(BaseDir) ) )
+			appStrncat( BaseDir, "/", sizeof(BaseDir) - 1 );
+#elif defined(PLATFORM_PSP)
 		if ( getcwd( BaseDir, sizeof(BaseDir) ) )
 			appStrncat( BaseDir, "/", sizeof(BaseDir) - 1 );
 #elif defined(PLATFORM_SDL)

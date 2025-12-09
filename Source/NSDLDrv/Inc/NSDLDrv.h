@@ -45,9 +45,9 @@ class NSDLDRV_API UNSDLViewport : public UViewport
 	virtual void UpdateInput( UBOOL Reset ) override;
 	virtual void MakeCurrent() override;
         virtual void MakeFullscreen( INT NewX, INT NewY, UBOOL UpdateProfile ) override;
-        virtual void WriteBinary( const void* Data, int Length, EName MsgType = NAME_None ) override;
         virtual void* GetWindow() override;
         virtual void SetMouseCapture( UBOOL Capture, UBOOL Clip, UBOOL FocusOnly ) override;
+        virtual void WriteBinary( const void* Data, INT Length, EName MsgType = NAME_Log ) override;
 
 	// UNSDLViewport interface.
 	void SetClientSize( INT NewX, INT NewY, UBOOL UpdateProfile );

@@ -781,12 +781,12 @@ static UBOOL SetupRaster( FTransform** Pts, INT NumPts, FSpanBuffer* Span, INT E
 	}
 	if( RasterStartY<0 || RasterEndY>EndY )
 	{
-		RasterStartY = Clamp( RasterStartY, 0, EndY );
-		RasterEndY   = Clamp( RasterEndY,   0, EndY );
+		RasterStartY = Clamp<INT>( RasterStartY, (INT)0, EndY );
+		RasterEndY   = Clamp<INT>( RasterEndY,   (INT)0, EndY );
 		for( INT i=0; i<NumPts; i++ )
 		{
-			Pts[i]->IntY    = Clamp( Pts[i]->IntY, 0, EndY );
-			Pts[i]->ScreenY = Clamp( Pts[i]->IntY, 0, EndY );
+			Pts[i]->IntY    = Clamp<INT>( Pts[i]->IntY, (INT)0, EndY );
+			Pts[i]->ScreenY = Clamp<INT>( Pts[i]->IntY, (INT)0, EndY );
 		}
 	}
 
@@ -1127,8 +1127,8 @@ UBOOL URender::BoundVisible
 		if      ( BoxY < BoxMinY ) BoxMinY = BoxY;
 		else if ( BoxY > BoxMaxY ) BoxMaxY = BoxY;
 	}
-	Result.MinX  = ::Max(BoxMinX,0);
-	Result.MinY  = ::Max(BoxMinY,0);
+	Result.MinX  = ::Max<INT>(BoxMinX,0);
+	Result.MinY  = ::Max<INT>(BoxMinY,0);
 	Result.MaxX  = ::Min(BoxMaxX,Frame->X);
 	Result.MaxY  = ::Min(BoxMaxY,Frame->Y);
 	Result.MinZ  = ::Max( BoxMinZ, 0.f );
@@ -1234,8 +1234,8 @@ void Traverse( FSceneNode* Frame, INT iNode )
 			}
 			if( !S.Point->Flags )
 			{
-				INT X = Clamp( appFloor( S.Point->ScreenX ), 0, Frame->X-1 );
-				INT Y = Clamp( S.Point->IntY, 0, Frame->Y-1 );
+				INT X = Clamp<INT>( appFloor( S.Point->ScreenX ), (INT)0, (INT)(Frame->X-1) );
+				INT Y = Clamp<INT>( S.Point->IntY, (INT)0, (INT)(Frame->Y-1) );
 				*Frame->Screen(X,Y) = 0xfe;
 			}
 		}

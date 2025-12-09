@@ -277,7 +277,7 @@ void UObject::execArrayElement( FFrame& Stack, BYTE*& Result )
 	{
 		// Display out-of-bounds warning and continue on with index clamped to valid range.
 		Stack.ScriptWarn( 0, "Accessed array out of bounds (%i/%i)", *(INT*)Addr, GProperty->ArrayDim );
-		*(INT*)Addr = Clamp( *(INT*)Addr, 0, GProperty->ArrayDim - 1 );
+		*(INT*)Addr = Clamp<INT>( *(INT*)Addr, (INT)0, (INT)( GProperty->ArrayDim - 1 ) );
 	}
 
 	// Add scaled offset to base pointer.
@@ -2277,8 +2277,8 @@ void UObject::execMid( FFrame& Stack, BYTE*& Result )
 	P_FINISH;
 
 	if( I < 0 ) C += I;
-	I = Clamp( I, 0, (int)appStrlen(A) );
-	C = Clamp( C, 0, (int)appStrlen(A)-I );
+	I = Clamp<INT>( I, (INT)0, (INT)appStrlen(A) );
+	C = Clamp<INT>( C, (INT)0, (INT)((INT)appStrlen(A)-I) );
 	appStrncpy( (char*)Result, A + I, C+1 );
 
 	unguardexecSlow;
@@ -2293,7 +2293,7 @@ void UObject::execLeft( FFrame& Stack, BYTE*& Result )
 	P_GET_INT(N);
 	P_FINISH;
 
-	N = Clamp( N, 0, appStrlen(A) );
+	N = Clamp<INT>( N, (INT)0, (INT)appStrlen(A) );
 	appStrncpy( (char*)Result, A, N+1 );
 
 	unguardexecSlow;
@@ -2308,7 +2308,7 @@ void UObject::execRight( FFrame& Stack, BYTE*& Result )
 	P_GET_INT(N);
 	P_FINISH;
 
-	N = Clamp( appStrlen(A) - N, 0, appStrlen(A) );
+	N = Clamp<INT>( (INT)appStrlen(A) - N, (INT)0, (INT)appStrlen(A) );
 	appStrcpy( (char*)Result, A + N );
 
 	unguardexecSlow;

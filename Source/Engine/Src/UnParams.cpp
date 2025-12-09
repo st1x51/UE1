@@ -127,7 +127,7 @@ UBOOL ENGINE_API GetFROTATOR
 (
 	const char*		Stream, 
 	FRotator&		Rotation,
-	INT				ScaleFactor
+	int				ScaleFactor
 )
 {
 	guard(GetFROTATOR);
@@ -168,7 +168,7 @@ UBOOL ENGINE_API GetFROTATOR
 	const char*		Stream, 
 	const char*		Match, 
 	FRotator&		Value,
-	INT				ScaleFactor
+	int				ScaleFactor
 )
 {
 	guard(GetFROTATOR);

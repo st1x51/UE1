@@ -6,6 +6,9 @@ Revision history:
 	* Created by Tim Sweeney.
 =============================================================================*/
 
+#ifndef PLATFORM_WIN32
+// Windows launcher is unused on non-Win32 platforms (e.g., PSP); skip this translation unit.
+#else
 #pragma warning( disable : 4201 )
 #define STRICT
 #include <windows.h>
@@ -480,6 +483,8 @@ void ExitEngine( UEngine* Engine )
 
 	unguard;
 }
+
+#endif // PLATFORM_WIN32
 
 /*-----------------------------------------------------------------------------
 	The End.

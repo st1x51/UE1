@@ -177,22 +177,22 @@ class DLL_EXPORT USoftwareRenderDevice : public URenderDevice
 
 	// URenderDevice interface.
 	static void InternalClassInitializer( UClass* Class );
-	UBOOL Init( UViewport* InViewport );
-	void Exit();
-	void Flush();
-	UBOOL Exec( const char* Cmd, FOutputDevice* Out );
-	void Lock( FPlane FlashScale, FPlane FlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize );
-	void Unlock( UBOOL Blit );
-	void DrawComplexSurface( FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet );
-	void DrawGouraudPolygon( FSceneNode* Frame, FTextureInfo& Texture, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* SpanBuffer );
-	void DrawTile( FSceneNode* Frame, FTextureInfo& Texture, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, FSpanBuffer* Span, FLOAT Z, FPlane Light, FPlane Fog, DWORD PolyFlags );
-	void GetStats( char* Result );
-	void Draw2DLine( FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2 );
-	void Draw2DPoint( FSceneNode* Frame, FPlane Color, DWORD LineFlags, FLOAT X1, FLOAT Y1, FLOAT X2, FLOAT Y2 );
-	void PushHit( const BYTE* Data, INT Count );
-	void PopHit( INT Count, UBOOL bForce );
-	void ReadPixels( FColor* Pixels );
-	void ClearZ( FSceneNode* Frame ){};
+	UBOOL Init( UViewport* InViewport ) override;
+	void Exit() override;
+	void Flush() override;
+	UBOOL Exec( const char* Cmd, FOutputDevice* Out ) override;
+	void Lock( FPlane FlashScale, FPlane FlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize ) override;
+	void Unlock( UBOOL Blit ) override;
+	void DrawComplexSurface( FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet ) override;
+	void DrawGouraudPolygon( FSceneNode* Frame, FTextureInfo& Texture, FTransTexture** Pts, int NumPts, DWORD PolyFlags, FSpanBuffer* SpanBuffer ) override;
+	void DrawTile( FSceneNode* Frame, FTextureInfo& Texture, FLOAT X, FLOAT Y, FLOAT XL, FLOAT YL, FLOAT U, FLOAT V, FLOAT UL, FLOAT VL, FSpanBuffer* Span, FLOAT Z, FPlane Color, FPlane Fog, DWORD PolyFlags ) override;
+	void GetStats( char* Result ) override;
+	void Draw2DLine( FSceneNode* Frame, FPlane Color, DWORD LineFlags, FVector P1, FVector P2 ) override;
+	void Draw2DPoint( FSceneNode* Frame, FPlane Color, DWORD LineFlags, FLOAT X1, FLOAT Y1, FLOAT X2, FLOAT Y2 ) override;
+	void PushHit( const BYTE* Data, INT Count ) override;
+	void PopHit( INT Count, UBOOL bForce ) override;
+	void ReadPixels( FColor* Pixels ) override;
+	void ClearZ( FSceneNode* Frame ) override;
 
 private:
 	// USoftwareRenderDevice interface.

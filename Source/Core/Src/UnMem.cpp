@@ -63,7 +63,7 @@ void FMemStack::Exit()
 // Return the amount of bytes that have been allocated from the
 // cache by this memory stack.
 //
-INT FMemStack::GetByteCount()
+int FMemStack::GetByteCount()
 {
 	guard(FMemStack::GetByteCount);
 	INT Count = 0;

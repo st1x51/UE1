@@ -701,7 +701,7 @@ CORE_API UBOOL appSaveStringToFile( const FString& Str, const char* Filename )
 //
 // Copy a string with length checking.
 //
-char* appStrncpy( char* Dest, const char* Src, INT MaxLen )
+char* appStrncpy( char* Dest, const char* Src, int MaxLen )
 {
 	guard(appStrncpy);
 

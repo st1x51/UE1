@@ -214,7 +214,7 @@ void UObject::SetLinker( ULinkerLoad* InLinker, INT InLinkerIndex )
 class FOutBuffer : public FOutputDevice, public TArray<BYTE>
 {
 public:
-	void WriteBinary( const void* InData, int Length, EName MsgType )
+	void WriteBinary( const void* InData, INT Length, EName MsgType=NAME_None )
 	{
 		INT Index = Add(Length);
 		appMemcpy( &(*this)(Index), InData, Length );
@@ -1984,15 +1984,15 @@ public:
 // QSort comparators.
 //
 static ULinkerSave* GTempSave;
-INT CDECL LinkerNameSort( const void* A, const void* B )
+int CDECL LinkerNameSort( const void* A, const void* B )
 {
 	return GTempSave->MapName((FName*)B) - GTempSave->MapName((FName*)A);
 }
-INT CDECL LinkerImportSort( const void* A, const void* B )
+int CDECL LinkerImportSort( const void* A, const void* B )
 {
 	return GTempSave->MapObject(((FObjectImport*)B)->Object) - GTempSave->MapObject(((FObjectImport*)A)->Object);
 }
-INT CDECL LinkerExportSort( const void* A, const void* B )
+int CDECL LinkerExportSort( const void* A, const void* B )
 {
 	return GTempSave->MapObject(((FObjectExport*)B)->_Object) - GTempSave->MapObject(((FObjectExport*)A)->_Object);
 }
@@ -3049,7 +3049,7 @@ void UTextBuffer::Serialize( FArchive& Ar )
 	Ar << Pos << Top << Text;
 	unguardobj;
 }
-void UTextBuffer::Export( FOutputDevice& Out, const char* FileType, INT Indent )
+void UTextBuffer::Export( FOutputDevice& Out, const char* FileType, int Indent )
 {
 	guard(UTextBuffer::Export);
 
