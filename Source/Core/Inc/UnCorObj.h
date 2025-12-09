@@ -80,7 +80,7 @@ class CORE_API UTextBuffer : public UObject, public FOutputDevice
 	void Serialize( FArchive& Ar );
 
 	// FOutputDevice interface.
-	void WriteBinary( const void* Data, int Length, EName MsgType=NAME_None );
+	void WriteBinary( const void* Data, INT Length, EName MsgType=NAME_None );
 };
 
 /*----------------------------------------------------------------------------

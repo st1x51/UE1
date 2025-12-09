@@ -198,13 +198,20 @@ UNSDLViewport::UNSDLViewport( ULevel* InLevel, UNSDLClient* InClient )
 // UObject interface.
 void UNSDLViewport::Destroy()
 {
-	guard(UNSDLViewport::Destroy);
-	if( Client->FullscreenViewport == this )
-	{
-		Client->FullscreenViewport = NULL;
-	}
-	UViewport::Destroy();
-	unguard;
+        guard(UNSDLViewport::Destroy);
+        if( Client->FullscreenViewport == this )
+        {
+                Client->FullscreenViewport = NULL;
+        }
+        UViewport::Destroy();
+        unguard;
+}
+
+void UNSDLViewport::Serialize( FArchive& Ar )
+{
+        guard(UNSDLViewport::Serialize);
+        UViewport::Serialize( Ar );
+        unguard;
 }
 
 //
@@ -588,10 +595,17 @@ void UNSDLViewport::MakeCurrent()
 //
 void UNSDLViewport::Repaint()
 {
-	guard(UNSDLViewport::Repaint);
-	if( !OnHold && RenDev && SizeX && SizeY )
-		Client->Engine->Draw( this, 0 );
-	unguard;
+        guard(UNSDLViewport::Repaint);
+        if( !OnHold && RenDev && SizeX && SizeY )
+                Client->Engine->Draw( this, 0 );
+        unguard;
+}
+
+void UNSDLViewport::WriteBinary( const void* Data, int Length, EName MsgType )
+{
+        guard(UNSDLViewport::WriteBinary);
+        UViewport::WriteBinary( Data, Length, MsgType );
+        unguard;
 }
 
 //

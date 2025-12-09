@@ -26,28 +26,28 @@ class NSDLDRV_API UNSDLViewport : public UViewport
 	DECLARE_CLASS_WITHOUT_CONSTRUCT( UNSDLViewport, UViewport, CLASS_Transient )
 	NO_DEFAULT_CONSTRUCTOR( UNSDLViewport )
 
-	// Constructors.
-	UNSDLViewport( ULevel* InLevel, class UNSDLClient* InClient );
-	static void InternalClassInitializer( UClass* Class );
-	virtual void Serialize(const TCHAR* Data, EName MsgType = NAME_None) override;
-	virtual void WriteBinary(const void* Data, int Length, EName MsgType = NAME_None) override;
-	// UObject interface.
-	virtual void Destroy() override;
+        // Constructors.
+        UNSDLViewport( ULevel* InLevel, class UNSDLClient* InClient );
+        static void InternalClassInitializer( UClass* Class );
+        // UObject interface.
+        virtual void Destroy() override;
+        virtual void Serialize( FArchive& Ar ) override;
 
-	// UViewport interface.
-	virtual UBOOL Lock( FPlane FlashScale, FPlane FlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* HitData=NULL, INT* HitSize=0 ) override;
+        // UViewport interface.
+        virtual UBOOL Lock( FPlane FlashScale, FPlane FlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* HitData=NULL, INT* HitSize=0 ) override;
 	virtual void Unlock( UBOOL Blit ) override;
 	virtual UBOOL Exec( const char* Cmd, FOutputDevice* Out ) override;
 	virtual void Repaint() override;
 	virtual void SetModeCursor() override;
-	virtual void UpdateWindow() override;
-	virtual void OpenWindow( void* ParentWindow, UBOOL Temporary, INT NewX, INT NewY, INT OpenX, INT OpenY ) override;
-	virtual void CloseWindow() override;
+        virtual void UpdateWindow() override;
+        virtual void OpenWindow( void* ParentWindow, UBOOL Temporary, INT NewX, INT NewY, INT OpenX, INT OpenY ) override;
+        virtual void CloseWindow() override;
 	virtual void UpdateInput( UBOOL Reset ) override;
 	virtual void MakeCurrent() override;
-	virtual void MakeFullscreen( INT NewX, INT NewY, UBOOL UpdateProfile ) override;
-	virtual void* GetWindow() override;
-	virtual void SetMouseCapture( UBOOL Capture, UBOOL Clip, UBOOL FocusOnly ) override;
+        virtual void MakeFullscreen( INT NewX, INT NewY, UBOOL UpdateProfile ) override;
+        virtual void WriteBinary( const void* Data, int Length, EName MsgType = NAME_None ) override;
+        virtual void* GetWindow() override;
+        virtual void SetMouseCapture( UBOOL Capture, UBOOL Clip, UBOOL FocusOnly ) override;
 
 	// UNSDLViewport interface.
 	void SetClientSize( INT NewX, INT NewY, UBOOL UpdateProfile );

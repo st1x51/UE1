@@ -3071,7 +3071,7 @@ IMPLEMENT_CLASS(UTextBuffer);
 //
 
 // Write a message.
-void UTextBuffer::WriteBinary( const void* Data, int Length, EName MsgType )
+void UTextBuffer::WriteBinary( const void* Data, INT Length, EName MsgType )
 {
 	guard(UTextBuffer::WriteBinary);
 	Text += (char*)Data;
