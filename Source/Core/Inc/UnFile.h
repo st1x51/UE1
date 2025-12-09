@@ -108,8 +108,8 @@ CORE_API void ClipboardPaste( class FString& Str );
 	#define unguardf(msg)		}
 #else
 	#define guard(func)			{static const char __FUNC_NAME__[]=#func; try{
-	#define unguard				}catch(char*Err){throw Err;}catch(...){appUnwindf("%s",__FUNC_NAME__); throw;}}
-	#define unguardf(msg)		}catch(char*Err){throw Err;}catch(...){appUnwindf("%s",__FUNC_NAME__); appUnwindf msg; throw;}}
+	#define unguard				}catch(...){appUnwindf("%s",__FUNC_NAME__); throw;}}
+	#define unguardf(msg)		}catch(...){appUnwindf("%s",__FUNC_NAME__); appUnwindf msg; throw;}}
 #endif
 
 //

@@ -114,7 +114,7 @@ void UConsole::PreRender( FSceneNode* Frame )
 		FLOAT Fraction = (FLOAT)(BorderSize-1) / (FLOAT)(MAX_BORDER-1);
 
 		BorderLines = (int)Min((FLOAT)Frame->Y * 0.25f * Fraction,(FLOAT)Frame->Y);
-		BorderLines = ::Max(0,BorderLines - ConsoleLines);
+		BorderLines = ::Max((INT)0, BorderLines - ConsoleLines);
 		Frame->Y -= 2 * BorderLines;
 
 		BorderPixels = (int)Min((FLOAT)Frame->X * 0.25f * Fraction,(FLOAT)Frame->X) & ~3;
@@ -243,13 +243,16 @@ void UConsole::PostRender( FSceneNode* Frame )
 		if( GetMainFrame()->Node && GetMainFrame()->Node->GetFName()=="Typing" )
 		{
 			// Draw stuff being typed.
-			int XL,YL;
+			INT XL, YL;
 			char S[256];
 			appSprintf( S, "(> %s_", TypedStr );
-			Viewport->Canvas->WrappedStrLen( Viewport->Canvas->MedFont, XL, YL, Frame->X-8, S );
+
+			INT Width = Frame->X - 8;
+
+			Viewport->Canvas->WrappedStrLen(Viewport->Canvas->MedFont, XL, YL, Width, S);
 			Viewport->Canvas->CurX = 2;
 			Viewport->Canvas->CurY = Frame->Y - ConsoleLines - YL - 1;
-			Viewport->Canvas->WrappedPrintf( Viewport->Canvas->MedFont, 0, "%s", S );
+			Viewport->Canvas->WrappedPrintf(Viewport->Canvas->MedFont, 0, "%s", S);
 		}
 	}
 	unguard;

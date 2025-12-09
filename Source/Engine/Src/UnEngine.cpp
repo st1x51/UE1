@@ -66,7 +66,7 @@ void UEngine::Init()
 
 	// Subsystems.
 	FURL::Init();
-	GCache.Init( 1024 * 1024 * Clamp(CacheSizeMegs,1,1024), 4096 );
+	GCache.Init( 1024 * 1024 * Clamp<INT>(CacheSizeMegs,1,1024), 4096 );
 
 	// Objects.
 	Cylinder = new UPrimitive;
@@ -219,7 +219,7 @@ UBOOL UEngine::Key( UViewport* Viewport, EInputKey Key )
 //
 // Input event handler.
 //
-int	UEngine::InputEvent( UViewport* Viewport, EInputKey iKey, EInputAction State, FLOAT Delta )
+INT	UEngine::InputEvent( UViewport* Viewport, EInputKey iKey, EInputAction State, FLOAT Delta )
 {
 	guard(UEngine::InputEvent);
 	if( Viewport->Console && Viewport->Console->eventKeyEvent( iKey, State, Delta ) )

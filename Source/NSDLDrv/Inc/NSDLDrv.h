@@ -29,7 +29,8 @@ class NSDLDRV_API UNSDLViewport : public UViewport
 	// Constructors.
 	UNSDLViewport( ULevel* InLevel, class UNSDLClient* InClient );
 	static void InternalClassInitializer( UClass* Class );
-
+	virtual void Serialize(const TCHAR* Data, EName MsgType = NAME_None) override;
+	virtual void WriteBinary(const void* Data, int Length, EName MsgType = NAME_None) override;
 	// UObject interface.
 	virtual void Destroy() override;
 

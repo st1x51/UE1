@@ -579,7 +579,7 @@ ULevel* UGameEngine::LoadMap( const FURL& URL, UPendingLevel* Pending, char* Err
 	Info->HubStackLevel
 	=	URL.HasOption("load") ? Info->HubStackLevel
 	:	URL.HasOption("push") ? SavedHubStackLevel+1
-	:	URL.HasOption("pop" ) ? Max(SavedHubStackLevel-1,0)
+	:	URL.HasOption("pop" ) ? Max<INT>(SavedHubStackLevel-1,0)
 	:	URL.HasOption("peer") ? SavedHubStackLevel
 	:	                        0;
 	unguard;

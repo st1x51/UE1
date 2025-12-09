@@ -240,7 +240,7 @@ void UMesh::GetFrame
 //
 // UMesh constructor.
 //
-UMesh::UMesh( INT NumPolys, INT NumVerts, INT NumFrames )
+UMesh::UMesh( int NumPolys, int NumVerts, int NumFrames )
 {
 	guard(UMesh::UMesh);
 

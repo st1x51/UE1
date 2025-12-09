@@ -269,11 +269,11 @@ int FPoly::SplitWithPlane
 //
 int FPoly::SplitWithNode
 (
-	const UModel	*Model,
-	INT				iNode,
-	FPoly			*FrontPoly,
-	FPoly			*BackPoly,
-	INT				VeryPrecise
+    const UModel *Model,
+    INT          iNode,
+    FPoly       *FrontPoly,
+    FPoly       *BackPoly,
+    int          VeryPrecise    
 ) const
 {
 	guard(FPoly::SplitWithNode);

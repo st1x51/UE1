@@ -198,7 +198,7 @@ inline FArchive& operator<<( FArchive& Ar, TArray<T>& A )
 	unguard;
 }
 template< class T >
-inline void TArray<T>::Remove( INT Index, INT Count )
+inline void TArray<T>::Remove( int Index, int Count )
 {
 	guard(TArray::Remove);
 	check(Index>=0);

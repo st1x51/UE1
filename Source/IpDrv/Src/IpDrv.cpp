@@ -120,7 +120,11 @@ class DLL_EXPORT UTcpipConnection : public UNetConnection
 	UBOOL			OpenedLocally;
 	char            LastStatusText[256];
 	FResolveInfo*	ResolveInfo;
-
+public:
+    virtual void WriteBinary(const void* Data, INT Length, EName MsgType = NAME_None) override
+    {
+        // No-op
+    }
 	// Latent queue.
 	struct FLatentQueue
 	{

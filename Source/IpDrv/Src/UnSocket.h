@@ -34,9 +34,12 @@ typedef char* LPSTR;
 #define WSAHOST_NOT_FOUND HOST_NOT_FOUND
 #define WSANO_DATA NO_ADDRESS
 #define closesocket close
-#ifdef PLATFORM_PSVITA
-// this is only used for FIONBIO
+#if defined(PLATFORM_PSVITA) || !defined(FIONBIO)
+// Vita (and platforms without FIONBIO) rely on SO_NONBLOCK instead.
 #define ioctlsocket( fd, opt, arg ) setsockopt( (fd), SOL_SOCKET, SO_NONBLOCK, (const void*)(arg), sizeof(*(arg)) )
+#ifndef FIONBIO
+#define FIONBIO 0
+#endif
 #else
 #define ioctlsocket ioctl
 #endif

@@ -597,7 +597,7 @@ void ULevel::NotifyReceivedText( UNetConnection* Connection, const char* Text )
 			}
 			INT RequestedByteLimit;
 			if( Parse( Str, "RATE=", RequestedByteLimit ) )
-				Connection->ByteLimit = Clamp( RequestedByteLimit, 500, NetDriver->MaxClientByteLimit );
+				Connection->ByteLimit = Clamp<INT>( RequestedByteLimit, 500, NetDriver->MaxClientByteLimit );
 			debugf( "Client rate is %i", Connection->ByteLimit );
 			for( INT i=0; i<Connection->Driver->Map.Num(); i++ )
 			{

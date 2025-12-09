@@ -1139,7 +1139,7 @@ void FMovingBrushTracker::ForceGroupFlush( INT iNode )
 // the level.  If Group is true, expects that NumGroupActors and GroupActors 
 // are valid.
 //
-void FMovingBrushTracker::FlushActorBrush( AActor* Actor, INT Group )
+void FMovingBrushTracker::FlushActorBrush( AActor* Actor, int Group )
 {
 	guard(FMovingBrushTracker::FlushActorBrush);
 	check(Actor->bAssimilated);

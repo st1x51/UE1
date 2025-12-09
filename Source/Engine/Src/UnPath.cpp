@@ -397,7 +397,7 @@ int FPathBuilder::Prune(AActor *Node)
 	unguard;
 }
 
-int FPathBuilder::specFor(AActor* Start, AActor* End)
+INT FPathBuilder::specFor(AActor* Start, AActor* End)
 {
 	guard(FPathBuilder::specFor);
 

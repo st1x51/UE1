@@ -141,7 +141,7 @@ void FChannel::ReceivedNak( _WORD Sequence )
 INT FChannel::MaxSend()
 {
 	guard(FChannel::MaxSend);
-	return Max( 0, Connection->MaxPacket - Connection->OutNum - (INT)sizeof(FBunch) );
+	return Max<INT>( 0, Connection->MaxPacket - Connection->OutNum - (INT)sizeof(FBunch) );
 	unguard;
 }
 
@@ -560,7 +560,7 @@ void FControlChannel::ReceivedBunch( FInBunch& Bunch )
 //
 // Text channel FOutputDevice interface.
 //
-void FControlChannel::WriteBinary( const void* Data, int Length, EName MsgType )
+void FControlChannel::WriteBinary( const void* Data, INT Length, EName MsgType )
 {
 	guard(FControlChannel::WriteBinary);
 

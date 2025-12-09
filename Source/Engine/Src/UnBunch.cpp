@@ -330,7 +330,7 @@ FOutBunch::FOutBunch( FChannel* InChannel, UBOOL bClose )
 //
 // Byte stream serializer.
 //
-FArchive& FOutBunch::Serialize( void* V, INT Length )
+FArchive& FOutBunch::Serialize( void* V, int Length )
 {
 	guard(FOutBunch::Serialize);	
 	if( Header.DataSize+Length<=MaxDataSize && !Overflowed )

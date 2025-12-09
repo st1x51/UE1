@@ -4577,7 +4577,7 @@ void UWaveTexture::SetWaveLight()
         if( Square(Reflected-Viewer) < Square(PhongRadius) )
             TempLight +=  (PhongRange * 2 ) * (PhongRadius - Abs(Reflected-Viewer)) / PhongRadius;
 
-        RenderTable[i] = Clamp( TempLight, 0, 255 );
+        RenderTable[i] = Clamp<INT>(TempLight, 0, 255);
     }
 	unguard;
 }

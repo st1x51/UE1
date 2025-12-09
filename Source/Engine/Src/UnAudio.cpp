@@ -88,7 +88,7 @@ void USound::Destroy()
 	Super::Destroy();
 	unguard;
 }
-void USound::Export( FOutputDevice& Out, const char* FileType, INT Indent )
+void USound::Export( FOutputDevice& Out, const char* FileType, int Indent )
 {
 	guard(USound::Export);
 	Out.WriteBinary( &Data(0), Data.Num() );

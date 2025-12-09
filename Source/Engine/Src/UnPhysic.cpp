@@ -306,9 +306,10 @@ void APawn::physicsRotation(FLOAT deltaTime, FVector OldVelocity)
 				RealAcceleration = RealAcceleration.TransformVectorBy(GMath.UnitCoords/NewRotation); //y component will affect roll
 
 				if (RealAcceleration.Y > 0) 
-					NewRotation.Roll = Min(RotationRate.Roll, (int)(RealAcceleration.Y * MaxRoll/AccelRate)); 
+					NewRotation.Roll = Min<INT>(RotationRate.Roll, (INT)(RealAcceleration.Y * MaxRoll / AccelRate));
 				else
-					NewRotation.Roll = ::Max(65536 - RotationRate.Roll, (int)(65536.f + RealAcceleration.Y * MaxRoll/AccelRate));
+					NewRotation.Roll = ::Max<INT>(65536 - RotationRate.Roll,
+                              (INT)(65536.f + RealAcceleration.Y * MaxRoll / AccelRate));
 
 				//smoothly change rotation
 				Rotation.Roll = Rotation.Roll & 65535;
@@ -1158,7 +1159,7 @@ void AActor::physFalling(FLOAT deltaTime, INT Iterations)
 		else if ( Hit.Time < 1.0 )
 		{
 			if ( Hit.Actor->IsA(APlayerPawn::StaticClass) && this->IsA(ADecoration::StaticClass) )
-				((ADecoration *)this)->numLandings = ::Max(0, ((ADecoration *)this)->numLandings - 1); 
+				((ADecoration *)this)->numLandings = ::Max<INT>(0, ((ADecoration *)this)->numLandings - 1); 
 			if (bBounce)
 			{
 				eventHitWall(Hit.Normal, Hit.Actor);
@@ -1691,7 +1692,7 @@ inline int APawn::checkFloor(FVector Dir, FCheckResult &Hit)
 	return 0;
 }
 
-int APawn::findNewFloor(FVector OldLocation, FLOAT deltaTime, FLOAT remainingTime, int Iterations)
+int APawn::findNewFloor(FVector OldLocation, FLOAT deltaTime, FLOAT remainingTime, INT Iterations)
 {
 	guard(APawn::findNewFloor);
 

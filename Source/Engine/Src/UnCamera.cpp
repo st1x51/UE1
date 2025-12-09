@@ -529,7 +529,7 @@ void UViewport::ExecMacro( const char* Filename, FOutputDevice* Out )
 //
 // Output a message on the viewport's console.
 //
-void UViewport::WriteBinary( const void* Data, INT Length, EName MsgType )
+void UViewport::WriteBinary( const void* Data,int Length, EName MsgType )
 {
 	guard(UViewport::WriteBinary);
 

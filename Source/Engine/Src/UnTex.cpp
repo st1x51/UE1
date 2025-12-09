@@ -385,8 +385,8 @@ void UTexture::PostLoad()
 		for( int i=0; i<256; i++ )
 			new(Palette->Colors)FColor(i,i,i,0);
 	}
-	UClamp = Clamp(UClamp,0,USize);
-	VClamp = Clamp(VClamp,0,VSize);
+	UClamp = Clamp<int>(UClamp,0,USize);
+	VClamp = Clamp<int>(VClamp,0,VSize);
 
 	// Init animation.
 	Accumulator = 0;
@@ -455,7 +455,7 @@ void UTexture::CreateMips( UBOOL FullMips, UBOOL Downsample )
 		while( UBits-Mips.Num()>=0 || VBits-Mips.Num()>=0 )
 		{
 			INT Num = Mips.Num();
-			new(Mips)FMipmap( Max(UBits-Num,0), Max(VBits-Num,0) );
+			new(Mips)FMipmap( Max<INT>(UBits-Num,0), Max<INT>(VBits-Num,0) );
 		}
 	}
 

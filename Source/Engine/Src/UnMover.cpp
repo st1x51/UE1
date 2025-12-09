@@ -103,7 +103,7 @@ void AMover::SetWorldRaytraceKey()
 	guard(AMover::SetWorldRaytraceKey);
 	if( WorldRaytraceKey!=255 )
 	{
-		WorldRaytraceKey = Clamp((INT)WorldRaytraceKey,0,(INT)ARRAY_COUNT(KeyPos)-1);
+		WorldRaytraceKey = Clamp((int)WorldRaytraceKey,0,(int)ARRAY_COUNT(KeyPos)-1);
 		if( bCollideActors && XLevel->Hash ) XLevel->Hash->RemoveActor( this );
 		Location = BasePos + KeyPos[WorldRaytraceKey];
 		Rotation = BaseRot + KeyRot[WorldRaytraceKey];
@@ -122,7 +122,7 @@ void AMover::SetBrushRaytraceKey()
 {
 	guard(AMover::SetBrushRaytraceKey);
 
-	BrushRaytraceKey = Clamp((INT)BrushRaytraceKey,0,(INT)ARRAY_COUNT(KeyPos)-1);
+	BrushRaytraceKey = Clamp<INT>((int)BrushRaytraceKey,0,(int)ARRAY_COUNT(KeyPos)-1);
 	if( bCollideActors && XLevel->Hash ) XLevel->Hash->RemoveActor( this );
 	Location = BasePos + KeyPos[BrushRaytraceKey];
 	Rotation = BaseRot + KeyRot[BrushRaytraceKey];

@@ -96,8 +96,7 @@ public:
 	FInBunch*       InRec[RELIABLE_BUFFER];
 
 	// FOutputDevice dummy interface.
-	void WriteBinary( const void* Data, int Length, EName MsgType ) {}
-
+	void WriteBinary( const void* Data, INT Length, EName MsgType = NAME_None ) {}
 	// Constructor.
 	FChannel( INT InChType, UNetConnection* InConnection, INT InChannelIndex, INT InOpenedLocally );
 	virtual ~FChannel();
@@ -140,7 +139,7 @@ class ENGINE_API FControlChannel : public FChannel
 	void ReceivedBunch( FInBunch& Bunch );
 
 	// FOutputDevice interface.
-	void WriteBinary( const void *Data, int Length, EName MsgType );
+	void WriteBinary( const void *Data, INT Length, EName MsgType );
 
 	// FControlChannel interface.
 	char* Describe( char* String256 );

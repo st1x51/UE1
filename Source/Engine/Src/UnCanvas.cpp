@@ -157,15 +157,15 @@ void UCanvas::WrappedStrLen
 	guard(UCanvas::WrappedStrLen);
 	check(Font);
 
-	int iLine=0;
-	int TestXL,TestYL;
+	INT iLine=0;
+	INT TestXL,TestYL;
 	XL = YL = 0;
 
 	// Process each output line.
 	while( Text[iLine] )
 	{
 		// Process each word until the current line overflows.
-		int iWord, iTestWord=iLine;
+		INT iWord, iTestWord=iLine;
 		do
 		{
 			iWord = iTestWord;
@@ -181,7 +181,7 @@ void UCanvas::WrappedStrLen
 		if( iWord == iLine )
 		{
 			// The text didn't fit word-wrapped onto this line, so chop it.
-			int iTestWord = iLine;
+			INT iTestWord = iLine;
 			do
 			{
 				iWord = iTestWord;
@@ -276,14 +276,14 @@ void VARARGS UCanvas::WrappedPrintf( UFont* Font, UBOOL Center, const char* Fmt,
 	guard(UCanvas::WrappedPrintf);
 	check(Font);
 
-	int iLine=0;
-	int TestXL, TestYL;
+	INT  iLine=0;
+	INT  TestXL, TestYL;
 
 	// Process each output line.
 	while( Text[iLine] )
 	{
 		// Process each word until the current line overflows.
-		int iWord, iTestWord=iLine;
+		INT  iWord, iTestWord=iLine;
 		do
 		{
 			iWord = iTestWord;

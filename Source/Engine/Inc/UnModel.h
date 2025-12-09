@@ -74,7 +74,7 @@ class ENGINE_API UModel : public UPrimitive
 	void Modify();
 	void BuildBound();
 	void Transform( ABrush* Owner );
-	void EmptyModel( INT EmptySurfInfo, INT EmptyPolys );
+	void EmptyModel( int EmptySurfInfo, int EmptyPolys );
 	void ShrinkModel();
 	UBOOL PotentiallyVisible( INT iLeaf1, INT iLeaf2 );
 

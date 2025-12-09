@@ -133,7 +133,7 @@ public:
 	virtual void Empty();
 	virtual void Shrink();
 	virtual INT Add( INT NumToAdd=1 );
-	virtual void Remove( INT Index, INT Count=1 );
+	virtual void Remove( int Index, int Count=1 );
 	virtual void* Realloc();
 	virtual void ModifyAllItems();
 

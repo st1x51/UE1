@@ -436,7 +436,7 @@ void UNOpenGLRenderDevice::DrawComplexSurfaceSingleTex( FSceneNode* Frame, FSurf
 	}
 }
 
-void UNOpenGLRenderDevice::DrawGouraudPolygon( FSceneNode* Frame, FTextureInfo& Texture, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* SpanBuffer )
+void UNOpenGLRenderDevice::DrawGouraudPolygon( FSceneNode* Frame, FTextureInfo& Texture, FTransTexture** Pts, int NumPts, DWORD PolyFlags, FSpanBuffer* SpanBuffer )
 {
 		guard(UNOpenGLRenderDevice::DrawGouraudPolygon);
 

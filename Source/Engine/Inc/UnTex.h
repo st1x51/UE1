@@ -60,10 +60,10 @@ public:
 	FColor( BYTE InR, BYTE InG, BYTE InB, BYTE InA )
 	:	R(InR), G(InG), B(InB), A(InA) {}
 	FColor( const FPlane& P )
-	:	R(Clamp(appFloor(P.R*256),0,255))
-	,	G(Clamp(appFloor(P.G*256),0,255))
-	,	B(Clamp(appFloor(P.B*256),0,255))
-	,	A(Clamp(appFloor(P.W*256),0,255))
+	:	R(Clamp<INT>(appFloor(P.R*256),0,255))
+	,	G(Clamp<INT>(appFloor(P.G*256),0,255))
+	,	B(Clamp<INT>(appFloor(P.B*256),0,255))
+	,	A(Clamp<INT>(appFloor(P.W*256),0,255))
 	{}
 
 	// Serializer.
@@ -276,7 +276,7 @@ class ENGINE_API UTexture : public UBitmap
 	// UObject interface.
 	void Serialize( FArchive& Ar );
 	const char* Import( const char* Buffer, const char* BufferEnd, const char* FileType );
-	void Export( FOutputDevice& Out, const char* FileType, INT Indent );
+	void Export( FOutputDevice& Out, const char* FileType, int Indent );
 	void PostLoad();
 
 	// UBitmap interface.
@@ -363,8 +363,8 @@ class ENGINE_API FFontCharacter
 {
 public:
 	// Variables.
-	int	StartU, StartV;
-	int	USize, VSize;
+	INT	StartU, StartV;
+	INT	USize, VSize;
 
 	// Serializer.
 	friend FArchive& operator<< (FArchive &Ar, FFontCharacter &Ch )
