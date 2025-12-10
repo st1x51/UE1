@@ -2,7 +2,7 @@
 	UnStaticExports.h: package export lookup for static builds.
 =============================================================================*/
 
-#ifdef UNREAL_STATIC
+#if defined(UNREAL_STATIC) || defined(PLATFORM_PSP)
 
 struct FPackageExport;
 

@@ -496,7 +496,7 @@ void appInit()
 	debugf( NAME_Init, "Detected: PlayStation Portable" );
 
 	// PSP timers tick at 1 MHz.
-	const DOUBLE Frequency = 1000000.0;
+	const DOUBLE Frequency = sceRtcGetTickResolution();
 	GSecondsPerCycle = 1.0 / Frequency;
 	debugf( NAME_Init, "CPU Timer Freq=%f Hz", (FLOAT)Frequency );
 
@@ -603,7 +603,7 @@ void appExit()
 	FGlobalPlatform misc.
 -----------------------------------------------------------------------------*/
 
-#ifdef UNREAL_STATIC
+#if defined(UNREAL_STATIC) || defined(PLATFORM_PSP)
 
 //
 // Load a library.
@@ -709,7 +709,7 @@ CORE_API void appFreeDllHandle( void* DllHandle )
 	guard(appFreeDllHandle);
 	check(DllHandle);
 
-#if defined(UNREAL_STATIC)
+#if defined(UNREAL_STATIC) || defined(PLATFORM_PSP)
 	// nothing
 #elif defined(PLATFORM_WIN32)
 	FreeLibrary( (HMODULE)DllHandle );
@@ -731,12 +731,12 @@ CORE_API void* appGetDllExport( void* DllHandle, const char* ProcName )
 	check(DllHandle);
 	check(ProcName);
 
-#if defined(UNREAL_STATIC)
+#if defined(UNREAL_STATIC) || defined(PLATFORM_PSP)
 	return appGetStaticExport( ProcName );
 #elif defined(PLATFORM_WIN32)
 	return (void*)GetProcAddress( (HMODULE)DllHandle, ProcName );
-#elif defined(PLATFORM_PSP)
-	return NULL;
+//#elif defined(PLATFORM_PSP)
+//	return NULL;
 #else
 	return (void*)dlsym( DllHandle, ProcName );
 #endif
@@ -903,48 +903,50 @@ UBOOL appFindPackageFile( const char* In, const FGuid* Guid, char* Out )
 	if( appFSize( Out ) >= 0 )
 		return 1;
 
-	// Try all of the predefined paths.
-	for( DWORD i=0; i<ARRAY_COUNT(GSys->Paths)+(Guid!=NULL); i++ )
+	// Try all of the predefined paths if the system object is ready.
+	if( GSys )
 	{
-		// Get directory only.
-		char Temp[256];
-		char* Ext;
-		if( i<ARRAY_COUNT(GSys->Paths) )
+		for( DWORD i = 0; i < ARRAY_COUNT(GSys->Paths) + (Guid != NULL); i++ )
 		{
-			if( *GSys->Paths[i]==0 )
-				continue;
-			strcpy( Temp, PATH(GSys->Paths[i]) );
-			Ext = appStrstr(Temp,"*");
-			if( Ext )
-				*Ext++ = 0;
-			strcpy( Out, Temp );
-			strcat( Out, In );
-		}
-		else
-		{
-			strcpy( Temp, PATH(GSys->CachePath) );
-			strcat( Temp, PATH_SEPARATOR );
-			Ext = GSys->CacheExt;
-			strcpy( Out, Temp );
-			strcat( Out, Guid->String(Temp) );
-		}
-
-		// Check for file.
-		UBOOL Found = 0;
-		Found = (appFSize(Out)>=0);
-		if( !Found && Ext )
-		{
-			strcat( Out, Ext );
-			Found = (appFSize( Out )>=0);
-		}
-		if( Found )
-		{
-			if( i==ARRAY_COUNT(GSys->Paths) )
+			// Get directory only.
+			char Temp[256];
+			char* Ext;
+			if( i < ARRAY_COUNT(GSys->Paths) )
 			{
-				// Update cache access time.
-				_utime( Out, NULL );
+				if( *GSys->Paths[i] == 0 )
+					continue;
+				strcpy( Temp, PATH(GSys->Paths[i]) );
+				Ext = appStrstr( Temp, "*" );
+				if( Ext )
+					*Ext++ = 0;
+				strcpy( Out, Temp );
+				strcat( Out, In );
 			}
-			return 1;
+			else
+			{
+				strcpy( Temp, PATH(GSys->CachePath) );
+				strcat( Temp, PATH_SEPARATOR );
+				Ext = GSys->CacheExt;
+				strcpy( Out, Temp );
+				strcat( Out, Guid->String(Temp) );
+			}
+
+			// Check for file.
+			UBOOL Found = (appFSize(Out) >= 0);
+			if( !Found && Ext )
+			{
+				strcat( Out, Ext );
+				Found = (appFSize( Out ) >= 0);
+			}
+			if( Found )
+			{
+				if( i == ARRAY_COUNT(GSys->Paths) )
+				{
+					// Update cache access time.
+					_utime( Out, NULL );
+				}
+				return 1;
+			}
 		}
 	}
 

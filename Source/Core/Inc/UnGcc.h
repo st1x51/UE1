@@ -45,10 +45,12 @@
 #undef VOID
 #undef CDECL
 
-// Make sure HANDLE is defined.
-#ifndef _WINDOWS_
-	#define HANDLE void*
-	#define HINSTANCE void*
+// Make sure HANDLE is defined (avoid redefining if already provided elsewhere).
+#ifndef HANDLE
+#define HANDLE void*
+#endif
+#ifndef HINSTANCE
+#define HINSTANCE void*
 #endif
 
 // Sizes.
@@ -151,6 +153,12 @@ typedef float    FLOAT;  // 32-bit IEEE floating point.
 	#define DO_SLOW_GUARD 0
 #endif
 
+#if defined(PLATFORM_PSP) && !defined(UNREAL_STATIC)
+// PSP cannot load modules dynamically, always use the static export
+// infrastructure so packages are linked directly into the EBOOT.
+#define UNREAL_STATIC 1
+#endif
+
 // Make sure characters are signed.
 static_assert((char)-1 < 0, "char must be signed.");
 
@@ -181,6 +189,10 @@ char* appUnixPath( const char* Path );
 #define LINE_TERMINATOR "\r\n"
 #define PATH_SEPARATOR "\\"
 #define DLLEXT ".dll"
+#elif defined(PLATFORM_PSP)
+#define LINE_TERMINATOR "\n"
+#define PATH_SEPARATOR "/"
+#define DLLEXT ".prx"
 #else
 #define LINE_TERMINATOR "\n"
 #define PATH_SEPARATOR "/"

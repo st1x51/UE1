@@ -2,7 +2,7 @@
 	UnStaticExports.cpp: Dreamcast-specific routines.
 =============================================================================*/
 
-#ifndef UNREAL_STATIC
+#if !defined(UNREAL_STATIC) && !defined(PLATFORM_PSP)
 #error "This file is for static builds only."
 #endif
 

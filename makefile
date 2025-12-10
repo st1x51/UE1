@@ -21,6 +21,8 @@ CPP_SOURCES := $(filter-out Source/Window/%, $(CPP_SOURCES))
 CPP_SOURCES := $(filter-out Source/WinDrv/%, $(CPP_SOURCES))
 CPP_SOURCES := $(filter-out Source/Unreal/Src/WinLaunch%, $(CPP_SOURCES))
 CPP_SOURCES := $(filter-out Source/Editor/%, $(CPP_SOURCES))
+#CPP_SOURCES += Source/Unreal/Src/PSPLaunch.cpp
+#CPP_SOURCES += Source/PSPDrv/Src/PSPClient.cpp
 OBJS        := $(CPP_SOURCES:.cpp=.o) $(C_SOURCES:.c=.o)
 
 # ---- include paths ----
@@ -45,7 +47,7 @@ Source/IpDrv/%.o    : CXXFLAGS += -DUPACKAGE_NAME=IpDrv    -DIPDRV_EXPORTS
 Source/SoftDrv/%.o  : CXXFLAGS += -DUPACKAGE_NAME=SoftDrv  -DSOFTDRV_EXPORTS
 Source/SoundDrv/%.o : CXXFLAGS += -DUPACKAGE_NAME=SoundDrv -DSOUNDDRV_EXPORTS
 Source/Unreal/%.o   : CXXFLAGS += -DUPACKAGE_NAME=Unreal   -DUNREAL_EXPORTS
-Source/PSPMain/%.o  : CXXFLAGS += -DUPACKAGE_NAME=PSPMain  -DPSPMAIN_EXPORTS
+Source/PSPDrv/%.o   : CXXFLAGS += -DUPACKAGE_NAME=PSPDrv   -DPSPDRV_EXPORTS
 
 Source/Core/%.o     : CFLAGS += -DUPACKAGE_NAME=Core     -DCORE_EXPORTS
 Source/Engine/%.o   : CFLAGS += -DUPACKAGE_NAME=Engine   -DENGINE_EXPORTS
@@ -55,7 +57,7 @@ Source/IpDrv/%.o    : CFLAGS += -DUPACKAGE_NAME=IpDrv    -DIPDRV_EXPORTS
 Source/SoftDrv/%.o  : CFLAGS += -DUPACKAGE_NAME=SoftDrv  -DSOFTDRV_EXPORTS
 Source/SoundDrv/%.o : CFLAGS += -DUPACKAGE_NAME=SoundDrv -DSOUNDDRV_EXPORTS
 Source/Unreal/%.o   : CFLAGS += -DUPACKAGE_NAME=Unreal   -DUNREAL_EXPORTS
-Source/PSPMain/%.o  : CFLAGS += -DUPACKAGE_NAME=PSPMain  -DPSPMAIN_EXPORTS
+Source/PSPDrv/%.o   : CFLAGS += -DUPACKAGE_NAME=PSPDrv   -DPSPDRV_EXPORTS
 
 # ---- flags ----
 COMMON_FLAGS = -ffast-math -O2 -G0 -Wall -Wextra -fno-strict-aliasing -fwrapv \
@@ -71,7 +73,7 @@ ASFLAGS  = $(CXXFLAGS)
 # ---- libraries ----
 # Only list application libs; pspsdk will pull in crt/psp kernel pieces automatically.
 LIBS = -lpspgum -lpspgu -lpspaudiolib -lpspaudio -lpsppower -lpsprtc -lpsphprm -lpspctrl \
-       -lpspvram -lpspdmac -lm -lstdc++
+       -lpspvram -lpspdmac -lpspdebug -lpspdisplay -lpspge -lm -lstdc++
 
 ifeq ($(GPROF),1)
 COMMON_FLAGS += -pg -DGPROF_ENABLED
