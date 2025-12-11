@@ -93,9 +93,11 @@ static bool FindRootPath( char* Out, size_t OutLen )
 	const char* Candidates[] =
 	{
 		"./",
+		"ms0:/PSP/GAME/UNREAL/",
 		"ms0:/PSP/GAME/UE1/",
 		"ms0:/PSP/GAME/",
 		"ms0:/",
+		"umd0:/PSP/GAME/UNREAL/",
 		"umd0:/PSP/GAME/UE1/",
 		"umd0:/PSP/GAME/",
 		"umd0:/",
@@ -124,6 +126,7 @@ static void WaitForButtonAndExit()
     }
     //sceKernelExitGame();
 }
+
 
 PSP_MODULE_INFO("UE1_PSP", 0, 1, 0);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
@@ -306,11 +309,35 @@ static void PlatformPreInit()
             "UseSound=False\n"
             "FirstRun=True\n"
             "\n"
+            // Minimal input bindings for the PSP pad so the game is controllable even on a synthesized ini.
+            "[Engine.Input]\n"
+            "Joy1=Jump\n"
+            "Joy2=Duck\n"
+            "Joy3=InventoryActivate\n"
+            "Joy4=Walking\n"
+            "Joy5=ActivateTranslator\n"
+            "Joy6=\n"
+            "Joy7=ShowMenu\n"
+            "Joy8=Duck\n"
+            "JoyX=Axis astrafe speed=1\n"
+            "JoyY=Axis aBaseY speed=1\n"
+            "JoyPovRight=NextWeapon\n"
+            "JoyPovLeft=PrevWeapon\n"
+            "JoyPovUp=InventoryPrevious\n"
+            "JoyPovDown=InventoryNext\n"
+            "\n"
             "[PSPDrv.PSPClient]\n"
             "ViewportX=480\n"
             "ViewportY=272\n"
             "Brightness=0.6\n"
             "StartupFullscreen=True\n"
+            "UseJoystick=True\n"
+            "DeadZoneXYZ=0.1\n"
+            "DeadZoneRUV=0.1\n"
+            "InvertY=False\n"
+            "InvertV=False\n"
+            "ScaleXYZ=200.0\n"
+            "ScaleRUV=500.0\n"
             "\n"
             "[PSPDrv.PSPRenderDevice]\n"
             "FullScreen=True\n"
@@ -417,8 +444,8 @@ UEngine* InitEngine()
     // Initialize memory subsystems (PSP only has ~45MB available)
     const INT DynMemSize   = 20 * 1024;
     const INT SceneMemSize = 24 * 1024;
-    GDynMem.Init(DynMemSize);
-    GSceneMem.Init(SceneMemSize);
+    GDynMem.Init(65536);
+    GSceneMem.Init(32768);
     // First-run check
     UBOOL FirstRun = 0;
     GetConfigBool("FirstRun", "FirstRun", FirstRun);
@@ -521,15 +548,19 @@ void MainLoop(UEngine* Engine)
     
     while(GIsRunning && !GIsRequestingExit)
     {
-        // Process PSP-specific input
-        ProcessPSPInput(Engine);
+        SceCtrlData Pad;
+        sceCtrlPeekBufferPositive(&Pad, 1);
+        if((Pad.Buttons & (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_START)) == 
+           (PSP_CTRL_LTRIGGER | PSP_CTRL_RTRIGGER | PSP_CTRL_START))
+        {
+            GIsRequestingExit = 1;
+        }
         
         // Calculate delta time
         DOUBLE NewTime = appSeconds();
         FLOAT DeltaTime = (FLOAT)(NewTime - OldTime);
         OldTime = NewTime;
         
-        // Clamp delta time to avoid huge jumps
         if(DeltaTime > 0.5f)
             DeltaTime = 0.5f;
         
@@ -630,7 +661,6 @@ int main(int argc, char* argv[])
     GIsEditor = ParseParam(appCmdLine(), "EDITOR") || ParseParam(appCmdLine(), "MAKE");
     // Set working directory
     appChdir(appBaseDir());
-
     // Initialize logging/exec hook
     GLogHook = &GPSPLog;
     GExecHook = GThisExecHook;
@@ -660,7 +690,7 @@ int main(int argc, char* argv[])
     }
     catch(...)
     {
-        try { HandleError(); } catch(...) {}
+        try { HandleError();} catch(...) {}
     }
 #endif
 

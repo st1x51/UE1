@@ -5,16 +5,31 @@
 #pragma once
 
 #include "Engine.h"
+#include <pspctrl.h>
 
 class UPSPViewport;
 
 class UPSPClient : public UClient, public FNotifyHook
 {
 	DECLARE_CLASS_WITHOUT_CONSTRUCT(UPSPClient, UClient, CLASS_Transient|CLASS_Config)
-	NO_DEFAULT_CONSTRUCTOR(UPSPClient)
 
+public:
+	UPSPClient();
+	static void InternalClassInitializer( UClass* Class );
+
+	// Configuration.
+	UBOOL UseJoystick;
+	UBOOL InvertY;
+	UBOOL InvertV;
+	FLOAT ScaleXYZ;
+	FLOAT ScaleRUV;
+	FLOAT DeadZoneXYZ;
+	FLOAT DeadZoneRUV;
+
+private:
 	UViewport* CurrentView;
 
+public:
 	// UClient interface.
 	void Init( UEngine* InEngine ) override;
 	void Flush() override;
@@ -56,5 +71,13 @@ public:
 	UBOOL Exec( const char* Cmd, FOutputDevice* Out=GSystem ) override;
 
 private:
-	UPSPClient* Client;
+        UPSPClient* Client;
+
+        // Cached controller state so we can generate press/release events.
+        SceCtrlData PrevPad;
+
+        // Time delta from the last read, used for axis scaling.
+        FLOAT LastDeltaSeconds;
+
+        UBOOL CauseInputEvent( INT Key, EInputAction Action, FLOAT Delta=0.0f );
 };

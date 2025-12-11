@@ -29,6 +29,9 @@ TArray<UObject*>    FObjectManager::Objects;
 TArray<INT>         FObjectManager::Available;
 TArray<UObject*>	FObjectManager::Loaders;
 TArray<UObject*>	FObjectManager::Root;
+#if defined(PLATFORM_PSP)
+TArray<FArchiveFileLoad*> FArchiveFileLoad::GOPooledReaders;
+#endif
 
 // For development.
 UBOOL GNoGC=0;

@@ -60,7 +60,7 @@ Source/Unreal/%.o   : CFLAGS += -DUPACKAGE_NAME=Unreal   -DUNREAL_EXPORTS
 Source/PSPDrv/%.o   : CFLAGS += -DUPACKAGE_NAME=PSPDrv   -DPSPDRV_EXPORTS
 
 # ---- flags ----
-COMMON_FLAGS = -ffast-math -O2 -G0 -Wall -Wextra -fno-strict-aliasing -fwrapv \
+COMMON_FLAGS = -ffast-math -O0 -G0 -Wall -Wextra -fno-strict-aliasing -fwrapv \
                -DPLATFORM_PSP -DPLATFORM_POSIX -DPLATFORM_LITTLE_ENDIAN \
                -DUNREAL_STATIC -DPSP -DNDEBUG $(INCLUDES)
 

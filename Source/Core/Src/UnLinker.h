@@ -230,73 +230,157 @@ struct FFileStatus
 class FArchiveFileLoad : public FArchive
 {
 public:
-	char Filename[256];
-	INT Pos;
-	FArchiveFileLoad( const char* InFilename )
-	: File(NULL)
-	, Pos(0)
-	{
-		guard(FArchiveFileLoad::FArchiveFileLoad);
-		appStrcpy( Filename, InFilename );
-		File = appFopen( Filename, "rb" );	
-		if( File == NULL )
-			appThrowf( LocalizeError("OpenFailed") );
-		appFseek( File, 0, USEEK_END );
-		Eof = appFtell( File );
-		appFseek( File, 0, USEEK_SET );
-		unguard;
-	}
-	FArchiveFileLoad()
-	: File(NULL)
-	{}
-	~FArchiveFileLoad()
-	{
-		guard(FArchiveFileLoad::~FArchiveFileLoad);
-		if( File )
-			appFclose( File );
-		File = NULL;
-		unguard;
-	}
-	void Seek( INT InPos, INT InReadAhead=0 )
-	{
-		guard(FArchiveFileLoad::Seek);
-		check(InPos>=0);
-		check(InPos<=Eof);
-		INT Result = appFseek(File,InPos,USEEK_SET);
-		if( Result!=0 )
-			appErrorf( "Seek Failed %i/%i (%i): %i %i", InPos, Eof, Pos, Result, appFerror(File) );
-		unguard;
-		Pos = InPos;
-	}
-	INT Tell()
-	{
-		return appFtell( File );
-	}
-	void Push( FFileStatus& St, BYTE* NewBuffer )
-	{
-		St.SavedPos = appFtell( File );
-	}
-	void Pop( FFileStatus& St )
-	{
-		guardSlow(FArchiveFileLoad::Pop);
-		INT Result = appFseek( File, St.SavedPos, USEEK_SET );
-		if( Result!=0 )
-			appErrorf( "Seek Failed %i/%i (%i): %i %i", St.SavedPos, Eof, Pos, Result, appFerror(File) );
-		Pos = St.SavedPos;
-		unguardSlow;
-	}
-	FArchive& Serialize( void* V, INT Length )
-	{
-		INT Count = appFread( V, Length, 1, File );
-		if( Count!=1 && Length!=0 )
-			appErrorf( "appFread failed: Count=%i Length=%i Error=%i", Count, Length, appFerror(File) );
-		Pos += Length;
-		check(Pos<=Eof);
-		return *this;
-	}
+        char Filename[256];
+        INT Pos;
+        #if defined(PLATFORM_PSP)
+        // PSP libc limits applications to 16 FILE* slots (3 are reserved),
+        // which is too small for Unreal's package loader.  Track open files
+        // globally and transparently close the least-recently-used handles
+        // so we never exhaust the descriptor table.
+        static void EnforceOpenBudget( FArchiveFileLoad* Requestor )
+        {
+                guard(EnforceOpenBudget);
+                const INT MaxOpenFiles = 10; // leave headroom for stdio/other subsystems
+                while( GOPooledReaders.Num() >= MaxOpenFiles )
+                {
+                        FArchiveFileLoad* Oldest = GOPooledReaders(0);
+                        GOPooledReaders.Remove( 0 );
+                        Oldest->CloseInternal();
+                }
+                GOPooledReaders.RemoveItem( Requestor );
+                GOPooledReaders.AddItem( Requestor );
+                unguard;
+        }
+        static void RemoveFromPool( FArchiveFileLoad* Reader )
+        {
+                guard(RemoveFromPool);
+                GOPooledReaders.RemoveItem( Reader );
+                unguard;
+        }
+        void EnsureOpen()
+        {
+                guard(EnsureOpen);
+                if( File )
+                {
+                        // Refresh LRU position and ensure the handle matches logical Pos.
+                        EnforceOpenBudget( this );
+                        if( appFtell( File ) != Pos )
+                                appFseek( File, Pos, USEEK_SET );
+                        return;
+                }
+
+                EnforceOpenBudget( this );
+                File = appFopen( Filename, "rb" );
+                if( File == NULL )
+                        appThrowf( LocalizeError("OpenFailed") );
+
+                // Seek to where the archive thinks it left off.
+                appFseek( File, Pos, USEEK_SET );
+                unguard;
+        }
+        void CloseInternal()
+        {
+                guard(CloseInternal);
+                if( File )
+                {
+                        appFclose( File );
+                        File = NULL;
+                }
+                unguard;
+        }
+        static TArray<FArchiveFileLoad*> GOPooledReaders;
+        #endif
+        FArchiveFileLoad( const char* InFilename )
+        : File(NULL)
+        , Pos(0)
+        {
+                guard(FArchiveFileLoad::FArchiveFileLoad);
+                appStrcpy( Filename, InFilename );
+                File = appFopen( Filename, "rb" );
+                if( File == NULL )
+                        appThrowf( LocalizeError("OpenFailed") );
+                appFseek( File, 0, USEEK_END );
+                Eof = appFtell( File );
+                appFseek( File, 0, USEEK_SET );
+#if defined(PLATFORM_PSP)
+                EnforceOpenBudget( this );
+#endif
+                unguard;
+        }
+        FArchiveFileLoad()
+        : File(NULL)
+        {}
+        ~FArchiveFileLoad()
+        {
+                guard(FArchiveFileLoad::~FArchiveFileLoad);
+                #if defined(PLATFORM_PSP)
+                RemoveFromPool( this );
+                CloseInternal();
+                #else
+                if( File )
+                        appFclose( File );
+                File = NULL;
+                #endif
+                unguard;
+        }
+        void Seek( INT InPos, INT InReadAhead=0 )
+        {
+                guard(FArchiveFileLoad::Seek);
+                check(InPos>=0);
+                check(InPos<=Eof);
+                #if defined(PLATFORM_PSP)
+                Pos = InPos;
+                EnsureOpen();
+                INT Result = appFseek(File,InPos,USEEK_SET);
+                #else
+                INT Result = appFseek(File,InPos,USEEK_SET);
+                #endif
+                if( Result!=0 )
+                        appErrorf( "Seek Failed %i/%i (%i): %i %i", InPos, Eof, Pos, Result, appFerror(File) );
+                unguard;
+                Pos = InPos;
+        }
+        INT Tell()
+        {
+#if defined(PLATFORM_PSP)
+                EnsureOpen();
+#endif
+                return appFtell( File );
+        }
+        void Push( FFileStatus& St, BYTE* NewBuffer )
+        {
+#if defined(PLATFORM_PSP)
+                EnsureOpen();
+#endif
+                St.SavedPos = appFtell( File );
+        }
+        void Pop( FFileStatus& St )
+        {
+                guardSlow(FArchiveFileLoad::Pop);
+#if defined(PLATFORM_PSP)
+                EnsureOpen();
+#endif
+                INT Result = appFseek( File, St.SavedPos, USEEK_SET );
+                if( Result!=0 )
+                        appErrorf( "Seek Failed %i/%i (%i): %i %i", St.SavedPos, Eof, Pos, Result, appFerror(File) );
+                Pos = St.SavedPos;
+                unguardSlow;
+        }
+        FArchive& Serialize( void* V, INT Length )
+        {
+#if defined(PLATFORM_PSP)
+                EnsureOpen();
+#endif
+                INT Count = appFread( V, Length, 1, File );
+                if( Count!=1 && Length!=0 )
+                        appErrorf( "appFread failed: Count=%i Length=%i Error=%i", Count, Length, appFerror(File) );
+                Pos += Length;
+                check(Pos<=Eof);
+                return *this;
+        }
 //!!private:
-	FILE* File;
-	INT Eof;
+        FILE* File;
+        INT Eof;
 };
 
 /*----------------------------------------------------------------------------

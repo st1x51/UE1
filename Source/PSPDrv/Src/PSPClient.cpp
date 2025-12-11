@@ -9,6 +9,35 @@
 IMPLEMENT_CLASS(UPSPClient);
 IMPLEMENT_CLASS(UPSPViewport);
 
+void UPSPClient::InternalClassInitializer( UClass* Class )
+{
+	guard(UPSPClient::InternalClassInitializer);
+	if( appStricmp( Class->GetName(), "PSPClient" ) == 0 )
+	{
+		new(Class,"UseJoystick",  RF_Public)UBoolProperty( CPP_PROPERTY(UseJoystick),  "Joystick", CPF_Config );
+		new(Class,"DeadZoneXYZ",  RF_Public)UFloatProperty( CPP_PROPERTY(DeadZoneXYZ), "Joystick", CPF_Config );
+		new(Class,"DeadZoneRUV",  RF_Public)UFloatProperty( CPP_PROPERTY(DeadZoneRUV), "Joystick", CPF_Config );
+		new(Class,"ScaleXYZ",     RF_Public)UFloatProperty( CPP_PROPERTY(ScaleXYZ),    "Joystick", CPF_Config );
+		new(Class,"ScaleRUV",     RF_Public)UFloatProperty( CPP_PROPERTY(ScaleRUV),    "Joystick", CPF_Config );
+		new(Class,"InvertY",      RF_Public)UBoolProperty(  CPP_PROPERTY(InvertY),     "Joystick", CPF_Config );
+		new(Class,"InvertV",      RF_Public)UBoolProperty(  CPP_PROPERTY(InvertV),     "Joystick", CPF_Config );
+	}
+	unguard;
+}
+
+UPSPClient::UPSPClient()
+{
+	guard(UPSPClient::UPSPClient);
+	UseJoystick  = 1;
+	InvertY      = 0;
+	InvertV      = 0;
+	ScaleXYZ     = 200.0f;
+	ScaleRUV     = 500.0f;
+	DeadZoneXYZ  = 0.10f;
+	DeadZoneRUV  = 0.10f;
+	unguard;
+}
+
 //
 // Spawn or replace the current render device for a viewport.
 //
@@ -149,27 +178,43 @@ void UPSPClient::EndFullscreen()
 
 UPSPViewport::UPSPViewport( ULevel* InLevel, UClient* InClient )
 : UViewport( InLevel, InClient )
- , Client( CastChecked<UPSPClient>( InClient ) )
+, Client( CastChecked<UPSPClient>( InClient ) )
+, LastDeltaSeconds( 0.0f )
 {
-	// Default size/format for PSP.
-	SizeX = 480;
-	SizeY = 272;
-	ColorBytes = 4;
-	Stride = SizeX;
-	ScreenPointer = nullptr;
-	debugf( NAME_Init, "PSPViewport: created %dx%d", SizeX, SizeY );
+        // Default size/format for PSP.
+        SizeX = 480;
+        SizeY = 272;
+        ColorBytes = 4;
+        Stride = SizeX;
+        ScreenPointer = nullptr;
+        appMemset( &PrevPad, 0, sizeof( PrevPad ) );
+        PrevPad.Lx = PrevPad.Ly = 128;
+        debugf( NAME_Init, "PSPViewport: created %dx%d", SizeX, SizeY );
 }
 
 void UPSPViewport::Destroy()
 {
-	guard(UPSPViewport::Destroy);
-	UViewport::Destroy();
-	unguard;
+        guard(UPSPViewport::Destroy);
+        UViewport::Destroy();
+        unguard;
 }
 
 void UPSPViewport::ReadInput( FLOAT DeltaSeconds )
 {
-	// Stub: no input yet.
+        guard(UPSPViewport::ReadInput);
+
+        LastDeltaSeconds = DeltaSeconds;
+
+        // Poll PSP controller state and dispatch input events.
+        UpdateInput( 0 );
+
+        // Run the engine input processing (hold states, key bindings, etc.).
+        if( Input )
+        {
+                Input->ReadInput( DeltaSeconds, GSystem );
+        }
+
+        unguard;
 }
 
 void UPSPViewport::WriteBinary( const void* Data, INT Length, EName MsgType )
@@ -184,6 +229,11 @@ void UPSPViewport::UpdateWindow()
 
 void UPSPViewport::OpenWindow( void* ParentWindow, UBOOL Temporary, INT NewX, INT NewY, INT OpenX, INT OpenY )
 {
+	(void)ParentWindow;
+	(void)Temporary;
+	(void)OpenX;
+	(void)OpenY;
+
 	SizeX = NewX ? NewX : SizeX;
 	SizeY = NewY ? NewY : SizeY;
 	ColorBytes = 4;
@@ -205,6 +255,148 @@ void UPSPViewport::CloseWindow()
 
 void UPSPViewport::UpdateInput( UBOOL Reset )
 {
+        guard(UPSPViewport::UpdateInput);
+
+        if( !Client || !Client->UseJoystick )
+        {
+                appMemset( &PrevPad, 0, sizeof( PrevPad ) );
+                PrevPad.Lx = PrevPad.Ly = 128;
+                LastDeltaSeconds = 0.0f;
+                return;
+        }
+
+        if( Reset )
+        {
+                appMemset( &PrevPad, 0, sizeof( PrevPad ) );
+                PrevPad.Lx = PrevPad.Ly = 128;
+                LastDeltaSeconds = 0.0f;
+                return;
+        }
+
+        SceCtrlData Pad;
+        // Prefer read (blocks until fresh state), fall back to peek if it fails.
+        if( sceCtrlReadBufferPositive( &Pad, 1 ) <= 0 )
+        {
+                if( sceCtrlPeekBufferPositive( &Pad, 1 ) <= 0 )
+                        return;
+        }
+
+        // Button mapping between the PSP pad and Unreal's joystick keys.
+        static const struct
+        {
+                DWORD Button;
+                EInputKey Key;
+        } ButtonMap[] =
+        {
+                { PSP_CTRL_CROSS,     IK_Joy1 },
+                { PSP_CTRL_CIRCLE,    IK_Joy2 },
+                { PSP_CTRL_SQUARE,    IK_Joy3 },
+                { PSP_CTRL_TRIANGLE,  IK_Joy4 },
+                { PSP_CTRL_LTRIGGER,  IK_Joy5 },
+                { PSP_CTRL_RTRIGGER,  IK_Joy6 },
+                { PSP_CTRL_START,     IK_Joy7 },
+                { PSP_CTRL_SELECT,    IK_Joy8 },
+                { PSP_CTRL_UP,        IK_JoyPovUp },
+                { PSP_CTRL_DOWN,      IK_JoyPovDown },
+                { PSP_CTRL_LEFT,      IK_JoyPovLeft },
+                { PSP_CTRL_RIGHT,     IK_JoyPovRight },
+        };
+
+        const DWORD Pressed  = Pad.Buttons & ~PrevPad.Buttons;
+        const DWORD Released = PrevPad.Buttons & ~Pad.Buttons;
+
+        // Debug helper: log any change in buttons or axes to verify the pad is being sampled.
+        const UBOOL bLogInput = (Pressed | Released) != 0;
+
+        // Map pad buttons to both joystick keys (for config-driven binds) and keyboard keys (fallback for menus/prompts).
+        struct FPadBinding
+        {
+                DWORD Button;
+                EInputKey JoyKey;
+                EInputKey FallbackKey;
+        };
+
+        const FPadBinding PadBindings[] =
+        {
+                { PSP_CTRL_CROSS,    IK_Joy1,        IK_Space },        // Jump
+                { PSP_CTRL_CIRCLE,   IK_Joy2,        IK_RightMouse },   // Alt fire
+                { PSP_CTRL_SQUARE,   IK_Joy3,        IK_Ctrl },         // Duck
+                { PSP_CTRL_TRIANGLE, IK_Joy4,        IK_MouseWheelUp }, // Next weapon
+                { PSP_CTRL_LTRIGGER, IK_Joy5,        IK_MouseWheelDown },// Prev weapon
+                { PSP_CTRL_RTRIGGER, IK_Joy6,        IK_LeftMouse },    // Fire
+                { PSP_CTRL_START,    IK_Joy7,        IK_Escape },       // Menu / exit prompts
+                { PSP_CTRL_SELECT,   IK_Joy8,        IK_Enter },        // Inventory / confirm
+                { PSP_CTRL_UP,       IK_JoyPovUp,    IK_Up },
+                { PSP_CTRL_DOWN,     IK_JoyPovDown,  IK_Down },
+                { PSP_CTRL_LEFT,     IK_JoyPovLeft,  IK_Left },
+                { PSP_CTRL_RIGHT,    IK_JoyPovRight, IK_Right },
+        };
+
+        for( INT i=0; i<ARRAY_COUNT(PadBindings); ++i )
+        {
+                const DWORD Mask = PadBindings[i].Button;
+                const EInputKey JoyKey = PadBindings[i].JoyKey;
+                const EInputKey FallbackKey = PadBindings[i].FallbackKey;
+
+                if( Pressed & Mask )
+                {
+                        if( JoyKey != IK_None )       CauseInputEvent( JoyKey, IST_Press );
+                        if( FallbackKey != IK_None )  CauseInputEvent( FallbackKey, IST_Press );
+
+                        if( Mask == PSP_CTRL_START && Client && Client->Engine )
+                        {
+                                // Force menu toggle in case bindings/config are missing.
+                                Client->Engine->Exec( "SHOWMENU", GSystem );
+
+                                // Also call the PlayerPawn ShowMenu exec directly to bypass input binding issues.
+                                if( Actor )
+                                {
+                                        if( APlayerPawn* Pawn = Cast<APlayerPawn>( Actor ) )
+                                        {
+                                                static const FName ShowMenuName( "ShowMenu" );
+                                                if( UFunction* Fn = Pawn->FindFunction( ShowMenuName ) )
+                                                {
+                                                        Pawn->ProcessEvent( Fn, nullptr );
+                                                }
+                                                else
+                                                {
+                                                        Pawn->bShowMenu = 1;
+                                                }
+                                        }
+                                }
+                        }
+                }
+                if( Released & Mask )
+                {
+                        if( JoyKey != IK_None )       CauseInputEvent( JoyKey, IST_Release );
+                        if( FallbackKey != IK_None )  CauseInputEvent( FallbackKey, IST_Release );
+                }
+        }
+
+        // Convert the analog nub to joystick axes.
+        const INT RawX = (INT)Pad.Lx - 128;
+        const INT RawY = (INT)Pad.Ly - 128;
+
+        const INT DeadZoneThreshold = Clamp<INT>( (INT)( Client->DeadZoneXYZ * 127.0f ), 0, 127 );
+        const FLOAT NormX = ( Abs(RawX) > DeadZoneThreshold ) ? ( RawX / 127.0f ) : 0.0f;
+        const FLOAT NormY = ( Abs(RawY) > DeadZoneThreshold ) ? ( RawY / 127.0f ) : 0.0f;
+
+        if( NormX || PrevPad.Lx != 128 )
+                CauseInputEvent( IK_JoyX, IST_Axis, Client->ScaleXYZ * NormX );
+
+        const FLOAT AxisYScale = Client->InvertY ? 1.0f : -1.0f;
+        if( NormY || PrevPad.Ly != 128 )
+                CauseInputEvent( IK_JoyY, IST_Axis, Client->ScaleXYZ * AxisYScale * NormY );
+
+        if( bLogInput || NormX || NormY )
+        {
+                debugf( NAME_Log, "PSP pad Buttons=%08X Press=%08X Release=%08X Lx=%u Ly=%u NX=%f NY=%f",
+                        Pad.Buttons, Pressed, Released, Pad.Lx, Pad.Ly, NormX, NormY );
+        }
+
+        PrevPad = Pad;
+
+        unguard;
 }
 
 void UPSPViewport::MakeCurrent()
@@ -244,4 +436,13 @@ void UPSPViewport::MakeFullscreen( INT NewX, INT NewY, UBOOL SaveConfig )
 UBOOL UPSPViewport::Exec( const char* Cmd, FOutputDevice* Out )
 {
 	return 0;
+}
+
+UBOOL UPSPViewport::CauseInputEvent( INT Key, EInputAction Action, FLOAT Delta )
+{
+        guard(UPSPViewport::CauseInputEvent);
+        if( Key >= 0 && Key < IK_MAX && Client && Client->Engine )
+                return Client->Engine->InputEvent( this, (EInputKey)Key, Action, Delta );
+        return 0;
+        unguard;
 }
