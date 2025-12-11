@@ -54,4 +54,7 @@ public:
 	void Repaint() override;
 	void MakeFullscreen( INT NewX, INT NewY, UBOOL SaveConfig ) override;
 	UBOOL Exec( const char* Cmd, FOutputDevice* Out=GSystem ) override;
+
+private:
+	UPSPClient* Client;
 };

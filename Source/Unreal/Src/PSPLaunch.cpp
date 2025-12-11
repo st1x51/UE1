@@ -2,9 +2,6 @@
 #include <pspctrl.h>
 #include <pspdebug.h>
 #include <pspdisplay.h>
-#include <pspge.h>
-#include <pspgu.h>
-#include <pspgum.h>
 #include <pspkernel.h>
 #include <psprtc.h>
 #include <psputility.h>
@@ -16,14 +13,6 @@
 #include <stdlib.h>
 
 #include "Engine.h"
-
-// PSP display constants
-#define PSP_SCR_WIDTH  480
-#define PSP_SCR_HEIGHT 272
-#define PSP_BUF_WIDTH  512
-
-// GU display list
-static unsigned int __attribute__((aligned(16))) displayList[262144];
 
 // Command line storage
 static char GCmdLine[512] = "";
@@ -166,16 +155,20 @@ FExecHook GLocalHook;
 DLL_EXPORT FExec* GThisExecHook = &GLocalHook;
 
 // PSP Log output device
+static bool GLogToDebugScreen = true;
+
 class FPSPLogOutput : public FOutputDevice
 {
 public:
-    void WriteBinary( const void* Data, INT Length, EName Event = NAME_None ) override
-    {
-        if( Event != NAME_None )
-        {
-            FName EventName( Event );
-            if( EventName.IsValid() )
-                pspDebugScreenPrintf( "[%s] ", *EventName );
+	void WriteBinary( const void* Data, INT Length, EName Event = NAME_None ) override
+	{
+		if( !GLogToDebugScreen )
+			return;
+		if( Event != NAME_None )
+		{
+			FName EventName( Event );
+			if( EventName.IsValid() )
+				pspDebugScreenPrintf( "[%s] ", *EventName );
         }
         pspDebugScreenPrintf( "%.*s", Length, static_cast<const char*>( Data ) );
     }
@@ -183,39 +176,9 @@ public:
 
 static FPSPLogOutput GPSPLog;
 
-// Initialize PSP graphics
-static void InitPSPGraphics()
+static void DisableDebugScreenLog()
 {
-    sceGuInit();
-    sceGuStart(GU_DIRECT, displayList);
-    
-    sceGuDrawBuffer(GU_PSM_8888, (void*)0, PSP_BUF_WIDTH);
-    sceGuDispBuffer(PSP_SCR_WIDTH, PSP_SCR_HEIGHT, (void*)0x88000, PSP_BUF_WIDTH);
-    sceGuDepthBuffer((void*)0x110000, PSP_BUF_WIDTH);
-    
-    sceGuOffset(2048 - (PSP_SCR_WIDTH / 2), 2048 - (PSP_SCR_HEIGHT / 2));
-    sceGuViewport(2048, 2048, PSP_SCR_WIDTH, PSP_SCR_HEIGHT);
-    sceGuDepthRange(65535, 0);
-    sceGuScissor(0, 0, PSP_SCR_WIDTH, PSP_SCR_HEIGHT);
-    sceGuEnable(GU_SCISSOR_TEST);
-    sceGuDepthFunc(GU_GEQUAL);
-    sceGuEnable(GU_DEPTH_TEST);
-    sceGuFrontFace(GU_CW);
-    sceGuShadeModel(GU_SMOOTH);
-    sceGuEnable(GU_CULL_FACE);
-    sceGuEnable(GU_TEXTURE_2D);
-    sceGuEnable(GU_CLIP_PLANES);
-    
-    sceGuFinish();
-    sceGuSync(0, 0);
-    sceDisplayWaitVblankStart();
-    sceGuDisplay(GU_TRUE);
-}
-
-// Shutdown PSP graphics
-static void ShutdownPSPGraphics()
-{
-    sceGuTerm();
+	GLogToDebugScreen = false;
 }
 
 // Exit callback thread
@@ -556,8 +519,6 @@ void MainLoop(UEngine* Engine)
     GIsRunning = 1;
     DOUBLE OldTime = appSeconds();
     
-    pspDebugScreenPrintf("Entering main loop...\n");
-    
     while(GIsRunning && !GIsRequestingExit)
     {
         // Process PSP-specific input
@@ -673,8 +634,6 @@ int main(int argc, char* argv[])
     // Initialize logging/exec hook
     GLogHook = &GPSPLog;
     GExecHook = GThisExecHook;
-    // Initialize graphics
-    InitPSPGraphics();
     // Main execution
 #ifndef _DEBUG
     try
@@ -686,6 +645,8 @@ int main(int argc, char* argv[])
         
         if(Engine && !GIsRequestingExit)
         {
+            // Stop writing logs into the debug screen once rendering starts to avoid corrupting the frame.
+            DisableDebugScreenLog();
             MainLoop(Engine);
         }
         
@@ -704,7 +665,6 @@ int main(int argc, char* argv[])
 #endif
 
     // Shutdown
-    ShutdownPSPGraphics();
     
     GExecHook = NULL;
     GLogHook = NULL;

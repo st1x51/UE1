@@ -9,12 +9,56 @@
 IMPLEMENT_CLASS(UPSPClient);
 IMPLEMENT_CLASS(UPSPViewport);
 
+//
+// Spawn or replace the current render device for a viewport.
+//
+static void PSPTryRenderDevice( UViewport* Viewport, const char* ClassName )
+{
+	guard(PSPTryRenderDevice);
+
+	if( !Viewport )
+		return;
+
+	// Tear down previous device if present.
+	if( Viewport->RenDev )
+	{
+		Viewport->RenDev->Exit();
+		delete Viewport->RenDev;
+		Viewport->RenDev = nullptr;
+	}
+
+	UClass* RenderClass = GObj.LoadClass( URenderDevice::StaticClass, NULL, ClassName, NULL, LOAD_KeepImports, NULL );
+	if( !RenderClass )
+	{
+		debugf( NAME_Critical, "PSPClient: Unable to find render class '%s'", ClassName );
+		return;
+	}
+
+	URenderDevice* Device = ConstructClassObject<URenderDevice>( RenderClass );
+	if( Device && Device->Init( Viewport ) )
+	{
+		Viewport->RenDev = Device;
+		debugf( NAME_Init, "PSPClient: Render device %s initialized", ClassName );
+	}
+	else
+	{
+		debugf( NAME_Critical, "PSPClient: Failed to initialize render device '%s'", ClassName );
+		if( Device )
+		{
+			Device->Exit();
+			delete Device;
+		}
+	}
+
+	unguard;
+}
+
 // UPSPClient
 
 void UPSPClient::Init( UEngine* InEngine )
 {
 	guard(UPSPClient::Init);
-	Engine = InEngine;
+	UClient::Init( InEngine );
 	CurrentView = nullptr;
 	debugf( NAME_Init, "PSPClient: Init" );
 	unguard;
@@ -52,6 +96,29 @@ UViewport* UPSPClient::CurrentViewport()
 void UPSPClient::Tick()
 {
 	guard(UPSPClient::Tick);
+
+	// Find the best realtime viewport and repaint it.
+	UPSPViewport* BestViewport = nullptr;
+	for( INT i=0; i<Viewports.Num(); ++i )
+	{
+		UPSPViewport* Viewport = CastChecked<UPSPViewport>( Viewports(i) );
+		if( Viewport->IsRealtime()
+			&& Viewport->SizeX && Viewport->SizeY
+			&& !Viewport->OnHold
+			&& Viewport->RenDev )
+		{
+			if( !BestViewport || Viewport->LastUpdateTime < BestViewport->LastUpdateTime )
+			{
+				BestViewport = Viewport;
+			}
+		}
+	}
+
+	if( BestViewport )
+	{
+		BestViewport->Repaint();
+	}
+
 	unguard;
 }
 
@@ -82,6 +149,7 @@ void UPSPClient::EndFullscreen()
 
 UPSPViewport::UPSPViewport( ULevel* InLevel, UClient* InClient )
 : UViewport( InLevel, InClient )
+ , Client( CastChecked<UPSPClient>( InClient ) )
 {
 	// Default size/format for PSP.
 	SizeX = 480;
@@ -121,6 +189,14 @@ void UPSPViewport::OpenWindow( void* ParentWindow, UBOOL Temporary, INT NewX, IN
 	ColorBytes = 4;
 	Stride = SizeX;
 	debugf( NAME_Init, "PSPViewport: OpenWindow %dx%d", SizeX, SizeY );
+
+	// Attempt to create the configured render device.
+	PSPTryRenderDevice( this, "ini:Engine.Engine.GameRenderDevice" );
+	if( !RenDev )
+	{
+		// Fall back to the classic software renderer if PSPDrv failed.
+		PSPTryRenderDevice( this, "SoftDrv.SoftwareRenderDevice" );
+	}
 }
 
 void UPSPViewport::CloseWindow()
@@ -150,6 +226,14 @@ void UPSPViewport::SetMouseCapture( UBOOL Capture, UBOOL Clip, UBOOL FocusOnly )
 
 void UPSPViewport::Repaint()
 {
+	guard(UPSPViewport::Repaint);
+
+	if( !OnHold && RenDev && SizeX && SizeY && Client && Client->Engine )
+	{
+		Client->Engine->Draw( this, 0 );
+	}
+
+	unguard;
 }
 
 void UPSPViewport::MakeFullscreen( INT NewX, INT NewY, UBOOL SaveConfig )

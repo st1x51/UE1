@@ -15,6 +15,13 @@ class UPSPRenderDevice : public URenderDevice
 	UBOOL Initialized;
 	static uint32_t CommandList[262144/4]; // 256 KB command list (aligned by definition).
 
+	// Software fallback renderer (SoftDrv) used to rasterize into a system buffer.
+	URenderDevice* SoftwareDevice;
+	BYTE* SoftwareBuffer;
+	INT SoftwareStride;
+
+	void BlitSoftwareBuffer();
+
 public:
 	// UObject interface.
 	void Destroy() override;
