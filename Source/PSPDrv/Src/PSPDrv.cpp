@@ -317,29 +317,33 @@ void UPSPRenderDevice::EndFlash()
 
 void UPSPRenderDevice::BlitSoftwareBuffer()
 {
-	if( !Initialized || !SoftwareBuffer )
-		return;
+        if( !Initialized || !SoftwareBuffer )
+                return;
 
-	// Upload the software framebuffer into the current GU draw buffer via CPU copy.
-	const int BytesPerPixel = Viewport->ColorBytes; // 2 for RGB565
-	const int DestStrideBytes = PSP_BUF_WIDTH * BytesPerPixel;
-	const int SrcStrideBytes = SoftwareStride * BytesPerPixel;
-	const int RowBytes = Viewport->SizeX * BytesPerPixel;
+        // Upload the software framebuffer into the current GU draw buffer via hardware blit.
+        const int BytesPerPixel = Viewport->ColorBytes; // 2 for RGB565
+        const int SrcStrideBytes = SoftwareStride * BytesPerPixel;
+        const int ColorFormat = ( BytesPerPixel == 2 ) ? GU_PSM_5650 : GU_PSM_8888;
 
-	sceKernelDcacheWritebackRange( SoftwareBuffer, SrcStrideBytes * Viewport->SizeY );
+        sceKernelDcacheWritebackRange( SoftwareBuffer, SrcStrideBytes * Viewport->SizeY );
 
-	uint8_t* Dest = static_cast<uint8_t*>( GDrawBuffer );
-	const uint8_t* Src = static_cast<uint8_t*>( SoftwareBuffer );
-	for( int y = 0; y < Viewport->SizeY; ++y )
-	{
-		memcpy( Dest + y * DestStrideBytes, Src + y * SrcStrideBytes, RowBytes );
-	}
+        // Copy to the current draw buffer using GU so the transfer happens on the GPU.
+        sceGuStart( GU_DIRECT, CommandList );
+        sceGuCopyImage( ColorFormat, 0, 0, Viewport->SizeX, Viewport->SizeY, SoftwareStride, SoftwareBuffer, 0, 0, PSP_BUF_WIDTH, ToGuRelative( GDrawBuffer ) );
+        sceGuFinish();
+        sceGuSync( GU_SYNC_FINISH, GU_SYNC_WHAT_DONE );
 
-	sceDisplayWaitVblankStart();
-	sceGuSwapBuffers();
+        sceDisplayWaitVblankStart();
+        sceGuSwapBuffers();
 
-	// Toggle draw/disp buffers for the next frame.
-	GDrawBufferIndex ^= 1;
-	GDrawBuffer = GFrameBuffers[GDrawBufferIndex];
-	GDispBuffer = GFrameBuffers[GDrawBufferIndex ^ 1];
+        // Toggle draw/disp buffers for the next frame and update GU state to the new targets.
+        GDrawBufferIndex ^= 1;
+        GDrawBuffer = GFrameBuffers[GDrawBufferIndex];
+        GDispBuffer = GFrameBuffers[GDrawBufferIndex ^ 1];
+
+        sceGuStart( GU_DIRECT, CommandList );
+        sceGuDrawBuffer( ColorFormat, ToGuRelative( GDrawBuffer ), PSP_BUF_WIDTH );
+        sceGuDispBuffer( Viewport->SizeX, Viewport->SizeY, ToGuRelative( GDispBuffer ), PSP_BUF_WIDTH );
+        sceGuFinish();
+        sceGuSync( GU_SYNC_FINISH, GU_SYNC_WHAT_DONE );
 }
